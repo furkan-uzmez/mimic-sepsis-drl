@@ -5,23 +5,59 @@
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Klinik olarak makul, veri sizintisina dayanikli ve yeniden uretilebilir bir offline RL benchmark'i olusturmak.
-**Current focus:** Planning documentation is reconciled with the completed implementation; next work is packaging/commit hygiene and any final project-proposal deliverables.
+**Current focus:** All 9 phases and 17 plans are complete. The project is a finished research benchmark — remaining work is limited to commit hygiene, LaTeX deliverables, and optional Graphify updates.
 
 ## Current Position
 
 Phase: 9 of 9 (Evaluation, Safety, and Reproducible Package)
 Plan: 17 of 17 completed
-Status: All roadmap phases complete; `.planning` docs were backfilled/reconciled on 2026-05-22
-Last activity: 2026-05-22 - Backfilled missing plan summaries for Phases 1, 2, and 5; updated ROADMAP/STATE to match the implemented repo
+Status: **COMPLETE** — All roadmap phases implemented, tested, documented, and planning docs reconciled.
+Last activity: 2026-05-22 — `.planning` doc reconciliation + `.gitignore` hygiene committed
 
 Progress: [██████████] 100% (9 of 9 phases complete)
+
+## Repository Snapshot
+
+**Codebase:**
+- Source modules: 53 Python files under `src/mimic_sepsis_rl/`
+- Test files: 28 Python files under `tests/`
+- Total source LOC: ~13,400
+- Python version: 3.12, managed with `uv`
+
+**Package structure:**
+```
+src/mimic_sepsis_rl/
+  data/         — cohort extraction, onset assignment, episodes, splits
+  mdp/          — feature dictionary, extractors, preprocessing, actions, rewards
+  datasets/     — transitions, replay buffer
+  training/     — device abstraction, config, CQL, BCQ, IQL, registry, experiment runner, comparison
+  evaluation/   — OPE (WIS/FQE/ESS), safety checks, ablation registry
+  reporting/    — offline RL artifact generation, reproducibility bundle
+  baselines/    — clinician, no-treatment, behavior cloning
+  cli/          — build_cohort, build_episode_grid, build_transitions
+```
+
+**Key dependencies:** PyTorch, d3rlpy, Polars, PyArrow, scikit-learn, Hydra, MLflow, matplotlib, seaborn
+
+**Configs:** `configs/{cohort,onset,splits,features,training}/` — 9 YAML files (including runtime.mps.yaml, runtime.cuda.yaml, cql.yaml, bcq.yaml, iql.yaml)
+
+**Docs:** 10 markdown docs under `docs/` + CQL run report assets under `docs/assets/cql-run/`
+
+**Trained artifacts:**
+- CQL checkpoints: 3 epochs (160/180/200) with manifests under `checkpoints/cql/`
+- IQL checkpoints: 3 epochs (160/180/200) with manifests under `checkpoints/iql/`
+- Run logs: `runs/cql/`, `runs/iql/iql_baseline/`
+
+**Data:** Processed Parquet artifacts under `data/processed/` (cohort, onset, episodes — gitignored)
+
+**External deliverable:** `proje_onerisi_iql/` — Turkish IQL project proposal (LaTeX source + PDF)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
+- Total plans completed: 17/17
 - Completed phases: 9/9
-- Planning docs now present for every roadmap plan
+- Planning doc coverage: 100% — every plan has a SUMMARY
 
 **By Phase:**
 
@@ -37,15 +73,11 @@ Progress: [██████████] 100% (9 of 9 phases complete)
 | 8 | 2 | 2 | ✅ Complete |
 | 9 | 2 | 2 | ✅ Complete |
 
-**Recent Trend:**
-- Last planning-doc reconciliation: 01-01, 01-02, 02-01, 02-02, 05-01, 05-02 summaries created/backfilled
-- Trend: Complete / documentation reconciliation
-
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecting the completed project:
+Decisions are logged in PROJECT.md Key Decisions table. Key decisions across the completed project:
 
 - Phase 1 locks the adult ICU Sepsis-3 cohort before onset logic or MDP construction.
 - Phase 2 assigns one selected onset or explicit unusable status, then materializes deterministic 4-hour episode windows.
@@ -81,7 +113,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - Summary: `03-01-SUMMARY.md`
 
 **Phase 4 — State Representation Pipeline ✅**
-- `src/mimic_sepsis_rl/mdp/features/dictionary.py`, `extractors.py`
+- `src/mimic_sepsis_rl/mdp/features/dictionary.py`, `extractors.py`, `builder.py`
 - `configs/features/default.yaml`
 - `docs/feature_dictionary.md`
 - Summaries: `04-01-SUMMARY.md`, `04-02-SUMMARY.md`
@@ -119,24 +151,40 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 
 ### Current Workspace Notes
 
-- `.gitignore` currently has local additions for `graphify-out` and `commit_history`.
-- `proje_onerisi_iql/` currently contains a Turkish IQL project proposal source/PDF plus LaTeX build artifacts.
-- `.planning/` now has a summary file for every plan listed in `ROADMAP.md`.
+- Working tree is clean (nothing uncommitted).
+- `.gitignore` excludes `graphify-out/`, `commit_history/`, `proje_onerisi_iql/`, `.agent/`, `/data/`.
+- `proje_onerisi_iql/` contains a Turkish IQL project proposal (LaTeX source + PDF + aux files), gitignored.
+- `.planning/` has a SUMMARY file for every plan in `ROADMAP.md` (18 summaries across 9 phases).
+- CQL and IQL training runs and checkpoints are committed; BCQ checkpoints have not been committed separately.
+
+### Git History (recent)
+
+```
+48b8765 chore(gitignore): exclude local-generated directories
+200c6c9 docs(planning): reconcile ROADMAP and STATE with completed implementation
+5368f71 docs(planning): backfill Phase 1, 2, 5 plan summaries
+428eeee feat(runs): add iql training runs logs and metrics
+8c455f4 feat(checkpoints): add iql model checkpoints
+b847ba6 test(reporting): cover offline RL artifact generation
+5a95226 feat(training): publish report artifacts from offline RL trainers
+7848517 feat(reporting): add offline RL reporting artifact bundle
+c7f7a4f artifacts: add CQL run outputs and checkpoints
+```
 
 ### Pending Todos
 
-- Decide whether `proje_onerisi_iql/proje_onerisi.tex` and `proje_onerisi_iql/proje_onerisi.pdf` should be committed, and whether LaTeX auxiliary files should be ignored or removed.
-- Stage/commit the `.planning` reconciliation and `.gitignore` hygiene changes when ready.
-- If Graphify is part of the final workflow, rerun `graphify update .` and `graphify export obsidian` after committing or before final packaging.
+- (Optional) Commit BCQ training checkpoints if they exist locally.
+- (Optional) Rerun `graphify update .` and `graphify export obsidian` if Graphify is part of the final deliverable workflow.
+- (Optional) Clean up LaTeX auxiliary files in `proje_onerisi_iql/` if the PDF is final.
 
 ### Blockers/Concerns
 
-- Large/local generated directories should stay out of git (`graphify-out`, `commit_history`, LaTeX aux files if not needed).
 - Retrospective OPE/safety outputs remain research evidence only; they must not be described as prospective bedside efficacy.
 - Full clinical validity still depends on the real MIMIC-IV data extraction and externally reviewed cohort/onset assumptions.
+- No BCQ training runs/checkpoints found in repo — only CQL and IQL have committed artifacts.
 
 ## Session Continuity
 
-Last session: 2026-05-22 13:20 +03
-Stopped at: Planning docs reconciled with completed roadmap; verification command passed for backfilled Phase 1/2/5 summaries
+Last session: 2026-05-22 15:01 +03
+Stopped at: All `.planning` docs reconciled; `.gitignore` hygiene committed; clean working tree
 Resume file: None
