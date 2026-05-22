@@ -12,19 +12,19 @@ Klinik olarak makul, veri sizintisina dayanikli ve yeniden uretilebilir bir offl
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Sepsis-3 temelli eriskin ICU kohortu ve tekil `sepsis_onset_time` uretimi kurulsun.
+- [x] `onset -24h` ile `onset +48h` arasinda 4 saatlik adimlarla episode ve state pipeline'i olusturulsun.
+- [x] Feature dictionary, imputasyon, normalization ve outlier kurallari dokumante edilip uygulanabilsin.
+- [x] Vazopressor ve IV fluid eylemleri train split'ten ogrenilen 25 ayrik action uzayina donusturulsun.
+- [x] Gecis dataset'i, patient-level split'ler ve baseline modeller ayni tanimlar uzerinde tekrar uretilebilir olsun.
+- [x] CQL, BCQ ve IQL ayni MDP ve reward tanimi uzerinde karsilastirilabilsin.
+- [x] Training ve evaluation pipeline'i ayni kod yoluyla hem MacBook M2 Pro `Metal/MPS` hem de NVIDIA RTX 4070 `CUDA` ortaminda calisabilsin.
+- [x] WIS, FQE, ESS, klinik akla uygunluk ve safety constraint analizleri ile modeller degerlendirilsin.
+- [x] Deney ayarlari, arti̇faktlar ve raporlama paketleri tez/paper kalitesinde yeniden uretilebilir olsun.
 
 ### Active
 
-- [ ] Sepsis-3 temelli eriskin ICU kohortu ve tekil `sepsis_onset_time` uretimi kurulsun.
-- [ ] `onset -24h` ile `onset +48h` arasinda 4 saatlik adimlarla episode ve state pipeline'i olusturulsun.
-- [ ] Feature dictionary, imputasyon, normalization ve outlier kurallari dokumante edilip uygulanabilsin.
-- [ ] Vazopressor ve IV fluid eylemleri train split'ten ogrenilen 25 ayrik action uzayina donusturulsun.
-- [ ] Gecis dataset'i, patient-level split'ler ve baseline modeller ayni tanimlar uzerinde tekrar uretilebilir olsun.
-- [ ] CQL, BCQ ve IQL ayni MDP ve reward tanimi uzerinde karsilastirilabilsin.
-- [ ] Training ve evaluation pipeline'i ayni kod yoluyla hem MacBook M2 Pro `Metal/MPS` hem de NVIDIA RTX 4070 `CUDA` ortaminda calisabilsin.
-- [ ] WIS, FQE, ESS, klinik akla uygunluk ve safety constraint analizleri ile modeller degerlendirilsin.
-- [ ] Deney ayarlari, arti̇faktlar ve raporlama paketleri tez/paper kalitesinde yeniden uretilebilir olsun.
+(None — all v1 requirements validated)
 
 ### Out of Scope
 
@@ -51,15 +51,15 @@ Bu repo su anda PDF'den turetilmis `implematation_plan_gpt.md` dosyasindaki aras
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Offline RL kullan | Klinik veride cevrimici deney yapmak riskli ve pahali | — Pending |
-| Off-policy ve model-free yaklasim sec | Gozlemsel veriyle davranis politikasindan ogrenmek daha uygulanabilir | — Pending |
-| State uzayini continuous tut | Vitals ve lab degerlerindeki bilgi kaybini azaltmak | — Pending |
-| Action uzayini 5x5 discrete yap | Vazopressor ve IV fluid dozlarini guvenli ve karsilastirilabilir sekilde ogrenmek | — Pending |
-| Timestep'i 4 saat olarak sabitle | Klinik aksiyonlar ile olcum frekansi arasinda pratik denge kurmak | — Pending |
-| Episode penceresini `-24h/+48h` ile sinirla | Sepsis onset cevresi klinik kararlarin yogunlastigi pencere | — Pending |
-| Ilk algoritma olarak CQL ile basla | Offline setting'de OOD action riskine karsi daha korumaci bir baslangic saglar | — Pending |
-| Ana training yolunu device-agnostic kur | MacBook M2 Pro `MPS` ve RTX 4070 `CUDA` uzerinde ayni pipeline'i calistirmak hedefleniyor | — Pending |
-| Degerlendirmede WIS + FQE birlikte kullan | Tek bir OPE metrigine guvenmek saglik alaninda zayif kalir | — Pending |
+| Offline RL kullan | Klinik veride cevrimici deney yapmak riskli ve pahali | ✅ Implemented — CQL/BCQ/IQL trained offline |
+| Off-policy ve model-free yaklasim sec | Gozlemsel veriyle davranis politikasindan ogrenmek daha uygulanabilir | ✅ Implemented — behavior policy replay buffer |
+| State uzayini continuous tut | Vitals ve lab degerlerindeki bilgi kaybini azaltmak | ✅ Implemented — continuous feature vectors |
+| Action uzayini 5x5 discrete yap | Vazopressor ve IV fluid dozlarini guvenli ve karsilastirilabilir sekilde ogrenmek | ✅ Implemented — 25-action grid in `mdp/actions/` |
+| Timestep'i 4 saat olarak sabitle | Klinik aksiyonlar ile olcum frekansi arasinda pratik denge kurmak | ✅ Implemented — 4h episode windows |
+| Episode penceresini `-24h/+48h` ile sinirla | Sepsis onset cevresi klinik kararlarin yogunlastigi pencere | ✅ Implemented — onset anchoring pipeline |
+| Ilk algoritma olarak CQL ile basla | Offline setting'de OOD action riskine karsi daha korumaci bir baslangic saglar | ✅ Implemented — CQL reference + checkpoints |
+| Ana training yolunu device-agnostic kur | MacBook M2 Pro `MPS` ve RTX 4070 `CUDA` uzerinde ayni pipeline'i calistirmak hedefleniyor | ✅ Implemented — `training/device.py` abstraction |
+| Degerlendirmede WIS + FQE birlikte kullan | Tek bir OPE metrigine guvenmek saglik alaninda zayif kalir | ✅ Implemented — `evaluation/ope.py` |
 
 ---
-*Last updated: 2026-03-28 after platform portability update*
+*Last updated: 2026-05-22 after full roadmap completion and planning reconciliation*
