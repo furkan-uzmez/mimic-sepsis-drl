@@ -6,6 +6,10 @@ dist/
 wheels/
 *.egg-info
 
+graphify-out
+commit_history
+proje_onerisi_iql
+
 # Virtual environments
 .venv
 
