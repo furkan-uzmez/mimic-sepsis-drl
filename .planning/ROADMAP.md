@@ -18,15 +18,15 @@ reproducible reporting. The core training path must remain portable across Apple
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Cohort Definition** - Lock the eligible adult ICU Sepsis-3 study population.
-- [ ] **Phase 2: Onset Anchoring and Episode Grid** - Assign one usable onset time and deterministic 4-hour windows per episode.
-- [ ] **Phase 3: Split Manifests and Leakage Boundaries** - Freeze patient-level data partitions before any train-only fitting.
-- [ ] **Phase 4: State Representation Pipeline** - Build leakage-safe continuous state vectors from a documented feature contract.
-- [ ] **Phase 5: Treatment and Reward Encoding** - Convert therapies and outcomes into the fixed MDP action-reward contract.
-- [ ] **Phase 6: Transition Dataset and Baseline Benchmarks** - Export replay-ready transitions and simple comparison baselines.
-- [ ] **Phase 7: CQL Reference Training** - Train the first conservative offline RL policy on the finalized dataset.
-- [ ] **Phase 8: Comparative Offline RL Experiments** - Add BCQ/IQL runs and experiment artifacts on the same contract.
-- [ ] **Phase 9: Evaluation, Safety, and Reproducible Package** - Validate model claims with OPE, safety checks, ablations, and reproducible outputs.
+- [x] **Phase 1: Cohort Definition** - Lock the eligible adult ICU Sepsis-3 study population.
+- [x] **Phase 2: Onset Anchoring and Episode Grid** - Assign one usable onset time and deterministic 4-hour windows per episode.
+- [x] **Phase 3: Split Manifests and Leakage Boundaries** - Freeze patient-level data partitions before any train-only fitting.
+- [x] **Phase 4: State Representation Pipeline** - Build leakage-safe continuous state vectors from a documented feature contract.
+- [x] **Phase 5: Treatment and Reward Encoding** - Convert therapies and outcomes into the fixed MDP action-reward contract.
+- [x] **Phase 6: Transition Dataset and Baseline Benchmarks** - Export replay-ready transitions and simple comparison baselines.
+- [x] **Phase 7: CQL Reference Training** - Train the first conservative offline RL policy on the finalized dataset.
+- [x] **Phase 8: Comparative Offline RL Experiments** - Add BCQ/IQL runs and experiment artifacts on the same contract.
+- [x] **Phase 9: Evaluation, Safety, and Reproducible Package** - Validate model claims with OPE, safety checks, ablations, and reproducible outputs.
 
 ## Phase Details
 
@@ -41,8 +41,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Encode cohort rules, CLI scaffold, config, and cohort spec docs
-- [ ] 01-02: Build auditable cohort extraction and exclusion reporting
+- [x] 01-01: Encode cohort rules, CLI scaffold, config, and cohort spec docs
+- [x] 01-02: Build auditable cohort extraction and exclusion reporting
 
 ### Phase 2: Onset Anchoring and Episode Grid
 **Goal**: Each usable ICU episode has one reliable sepsis anchor and a deterministic 4-hour analysis timeline.
@@ -55,8 +55,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Implement Sepsis-3 onset assignment with unusable-case handling
-- [ ] 02-02: Materialize deterministic 4-hour episode windows and truncation metadata
+- [x] 02-01: Implement Sepsis-3 onset assignment with unusable-case handling
+- [x] 02-02: Materialize deterministic 4-hour episode windows and truncation metadata
 
 ### Phase 3: Split Manifests and Leakage Boundaries
 **Goal**: Patient-level split boundaries are fixed early enough to protect every learned transform from leakage.
@@ -69,7 +69,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 03-01: Generate patient-level split manifests and leakage guardrails
+- [x] 03-01: Generate patient-level split manifests and leakage guardrails
 
 ### Phase 4: State Representation Pipeline
 **Goal**: Every episode step can be converted into a leakage-safe continuous state vector from a documented feature contract.
@@ -83,8 +83,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Define feature dictionary and extraction contract
-- [ ] 04-02: Build deterministic state vectors with train-only preprocessing
+- [x] 04-01: Define feature dictionary and extraction contract
+- [x] 04-02: Build deterministic state vectors with train-only preprocessing
 
 ### Phase 5: Treatment and Reward Encoding
 **Goal**: Clinician interventions and outcomes are represented in a fixed MDP action-reward contract.
@@ -97,8 +97,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Standardize treatments and freeze the 25-action map
-- [ ] 05-02: Implement reward contract and reward diagnostics
+- [x] 05-01: Standardize treatments and freeze the 25-action map
+- [x] 05-02: Implement reward contract and reward diagnostics
 
 ### Phase 6: Transition Dataset and Baseline Benchmarks
 **Goal**: Prepared episodes become replay-ready offline RL datasets with simple baselines on the same contract.
@@ -111,8 +111,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Export transitions and replay-ready dataset artifacts
-- [ ] 06-02: Implement clinician, no-treatment, and behavior-cloning baselines
+- [x] 06-01: Export transitions and replay-ready dataset artifacts
+- [x] 06-02: Implement clinician, no-treatment, and behavior-cloning baselines
 
 ### Phase 7: CQL Reference Training
 **Goal**: A conservative offline RL reference model can be trained end-to-end on the finalized dataset with one device-agnostic runtime path for `MPS` and `CUDA`.
@@ -157,8 +157,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: Implement OPE metrics, safety checks, and evaluation protocol
-- [ ] 09-02: Add ablation registry and reproducible reporting bundle
+- [x] 09-01: Implement OPE metrics, safety checks, and evaluation protocol
+- [x] 09-02: Add ablation registry and reproducible reporting bundle
 
 ## Progress
 
@@ -167,12 +167,12 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cohort Definition | 0/2 | Not started | - |
-| 2. Onset Anchoring and Episode Grid | 0/2 | Not started | - |
-| 3. Split Manifests and Leakage Boundaries | 0/1 | Not started | - |
-| 4. State Representation Pipeline | 0/2 | Not started | - |
-| 5. Treatment and Reward Encoding | 0/2 | Not started | - |
-| 6. Transition Dataset and Baseline Benchmarks | 0/2 | Not started | - |
+| 1. Cohort Definition | 2/2 | ✅ Complete | 2026-05-22 |
+| 2. Onset Anchoring and Episode Grid | 2/2 | ✅ Complete | 2026-05-22 |
+| 3. Split Manifests and Leakage Boundaries | 1/1 | ✅ Complete | 2026-03-29 |
+| 4. State Representation Pipeline | 2/2 | ✅ Complete | 2026-03-29 |
+| 5. Treatment and Reward Encoding | 2/2 | ✅ Complete | 2026-05-22 |
+| 6. Transition Dataset and Baseline Benchmarks | 2/2 | ✅ Complete | 2026-03-29 |
 | 7. CQL Reference Training | 2/2 | ✅ Complete | 2026-03-29 |
 | 8. Comparative Offline RL Experiments | 2/2 | ✅ Complete | 2026-03-29 |
-| 9. Evaluation, Safety, and Reproducible Package | 0/2 | Not started | - |
+| 9. Evaluation, Safety, and Reproducible Package | 2/2 | ✅ Complete | 2026-03-29 |

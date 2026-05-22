@@ -55,6 +55,7 @@ completed: 2026-03-29
 - Replaced planned BCQ/IQL registry placeholders with real handlers so both algorithms launch through `experiment_runner`.
 - Added comparison utilities that normalize checkpoints, manifests, metric curves, config provenance, and dataset-contract metadata into one schema.
 - Documented how to interpret comparison outputs without confusing algorithm changes with replay-contract drift.
+- Post-reconciliation note (2026-05-22): `proje_onerisi_iql/proje_onerisi.tex` and `proje_onerisi_iql/proje_onerisi.pdf` now capture the Turkish project-proposal rationale for selecting IQL as the preferred offline RL method.
 
 ## Task Commits
 
