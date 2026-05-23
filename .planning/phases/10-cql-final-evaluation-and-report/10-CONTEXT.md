@@ -35,10 +35,30 @@ Run a multi-seed CQL hyperparameter sweep (reward shaping ablation), evaluate al
 - Single action grid: 5×5 bins
 - All other contract elements frozen (state, split, episode rules)
 
-### Multi-seed policy
-- 5 seeds (42, 123, 456, 789, 1024) per reward variant
+### Learning rate sweep
+- Three values: **1×10⁻⁴, 3×10⁻⁴, 1×10⁻³**
+- Screened in Stage 1 with CQL alpha
+- Selected because: lr is the most impactful hyperparameter after α_CQL
+
+### CQL alpha sweep
+- Four values: **0.05, 0.1, 0.5, 1.0**
+- Included in Stage 1 broad screen (not deferred to Stage 2)
+- Rationale: Sepsis CQL papers (Nambiar 2023, Offline Safe RL 2025) show best alpha often ≤ 0.1; 2025 paper found best α = 0.05
+- Literature-backed range from sepsis offline RL studies
+
+### Common evaluation reward
+- **Critical:** FQE model selection uses a common terminal survival utility, NOT the training reward
+- Shaped and sparse reward used only for training; evaluation always uses terminal ±15 survival/death
+- Prevents unfair comparison between policies trained with different reward scales
+
+### Multi-seed protocol (Tang & Wiens 2021)
+- **Stage 1:** 1 seed (42) × 2 rewards × 3 lr × 4 alpha = 24 configs screened
+- FQE ranking on validation set (common terminal utility) selects top 6
+- **Stage 2:** 6 configs × 4 extra seeds (123, 456, 789, 1024) = 24 runs
+- Total: 48 CQL training runs, ~6.5 hours
+- **Best checkpoint:** Selected by validation FQE, NOT epoch 200 (prior run showed best at epoch 140)
 - Same train/val/test split across all seeds
-- Report mean ± 95% bootstrap CI, not best-seed
+- Report mean ± 95% bootstrap CI per configuration
 
 ### Evaluation
 - Primary metric: FQE with patient-level bootstrap CI
