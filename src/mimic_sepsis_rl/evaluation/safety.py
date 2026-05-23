@@ -266,6 +266,57 @@ def build_action_heatmap(
     )
 
 
+def build_learned_policy_heatmap(
+    policy: ActionSelectionPolicy,
+    episodes: Sequence[HeldOutEpisode],
+    action_bins: ActionBinner | ActionBinArtifacts,
+    *,
+    title: str = "learned_policy_actions",
+) -> ActionHeatmap:
+    """Build a 5×5 heatmap of actions selected by a learned policy.
+
+    Iterates over every step in the held-out episodes, calls
+    ``policy.select_action(state)`` for each, and bins the selected
+    actions into the same 5×5 vasopressor×fluid grid as the clinician
+    heatmap.  The result can be plotted side-by-side with
+    ``build_action_heatmap(…)`` on clinician actions for visual
+    comparison.
+
+    Parameters
+    ----------
+    policy : ActionSelectionPolicy
+        A deterministic target policy (e.g. a loaded CQL checkpoint).
+    episodes : sequence of HeldOutEpisode
+        Held-out trajectories to evaluate.
+    action_bins : ActionBinner or ActionBinArtifacts
+        The same binning definition used for clinician actions.
+    title : str
+        Label for the returned heatmap.
+
+    Returns
+    -------
+    ActionHeatmap
+        5×5 heatmap summarising where the learned policy allocates actions.
+    """
+    action_binner = _coerce_action_binner(action_bins)
+    action_ids: list[int] = []
+    for episode in episodes:
+        for step in episode.steps:
+            chosen = int(policy.select_action(step.state))
+            if not 0 <= chosen < 25:
+                raise ValueError(
+                    f"Policy chose invalid action {chosen} "
+                    f"for episode {step.episode_id}, step {step.step_index}."
+                )
+            action_ids.append(chosen)
+
+    return build_action_heatmap(
+        tuple(action_ids),
+        action_binner,
+        title=title,
+    )
+
+
 def build_delta_heatmap(
     clinician_action_ids: Sequence[int],
     policy_action_ids: Sequence[int],
@@ -531,6 +582,7 @@ __all__ = [
     "SupportWarning",
     "build_action_heatmap",
     "build_delta_heatmap",
+    "build_learned_policy_heatmap",
     "build_safety_review",
     "build_safety_review_rows",
     "generate_support_warnings",

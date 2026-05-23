@@ -9,6 +9,7 @@ import pytest
 from mimic_sepsis_rl.evaluation.ope import HeldOutEpisode, HeldOutStep
 from mimic_sepsis_rl.evaluation.safety import (
     ActionSupport,
+    build_learned_policy_heatmap,
     build_safety_review,
     build_safety_review_rows,
     SafetyReviewRow,
@@ -143,3 +144,75 @@ def test_build_safety_review_rows_uses_policy_and_support_lookup() -> None:
     assert [row.subgroup for row in rows] == ["early", "late"]
     assert rows[1].policy_action_support_prob == pytest.approx(0.01)
     assert rows[1].policy_action_support_count == 2
+
+
+def test_build_learned_policy_heatmap_matches_episode_count() -> None:
+    """Learned-policy heatmap sums to the total number of steps evaluated."""
+    episodes = (
+        HeldOutEpisode(
+            episode_id="ep-1",
+            steps=(
+                HeldOutStep(
+                    episode_id="ep-1",
+                    step_index=0,
+                    state=(0.0, 1.0),
+                    action=0,
+                    reward=0.0,
+                    done=False,
+                    behavior_action_prob=0.4,
+                ),
+                HeldOutStep(
+                    episode_id="ep-1",
+                    step_index=1,
+                    state=(1.0, 1.0),
+                    action=0,
+                    reward=0.0,
+                    done=True,
+                    behavior_action_prob=0.3,
+                ),
+            ),
+        ),
+        HeldOutEpisode(
+            episode_id="ep-2",
+            steps=(
+                HeldOutStep(
+                    episode_id="ep-2",
+                    step_index=0,
+                    state=(2.0, 3.0),
+                    action=6,
+                    reward=0.0,
+                    done=True,
+                    behavior_action_prob=0.5,
+                ),
+            ),
+        ),
+    )
+    policy = MappingPolicy(
+        actions={
+            (0.0, 1.0): 0,
+            (1.0, 1.0): 24,
+            (2.0, 3.0): 6,
+        }
+    )
+
+    heatmap = build_learned_policy_heatmap(
+        policy,
+        episodes,
+        _action_bins(),
+        title="test_learned",
+    )
+
+    # 3 total steps, all should be in the heatmap
+    assert heatmap.total == 3
+    assert heatmap.title == "test_learned"
+    assert len(heatmap.counts) == 5
+    assert len(heatmap.counts[0]) == 5
+    # Action 0 maps to vaso_bin=0, fluid_bin=0
+    assert heatmap.counts[0][0] == 1
+    # Action 6 = vaso_bin=1, fluid_bin=1 (action_id = vaso_bin*5 + fluid_bin)
+    assert heatmap.counts[1][1] == 1
+    # Action 24 maps to vaso_bin=4, fluid_bin=4
+    assert heatmap.counts[4][4] == 1
+    # Normalized should sum to 1.0
+    norm_sum = sum(sum(row) for row in heatmap.normalized)
+    assert norm_sum == pytest.approx(1.0)
