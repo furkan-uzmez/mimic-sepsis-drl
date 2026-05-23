@@ -695,16 +695,24 @@ def _run_live(args: argparse.Namespace) -> int:
 
     if missing_subjects:
         unique_missing = sorted(set(missing_subjects))
-        logger.warning(
-            "%d rows / %d unique subject_ids not found in split manifest. "
-            "These rows will be dropped. First 5 missing: %s",
-            len(missing_subjects), len(unique_missing), unique_missing[:5],
-        )
         # Drop rows with missing split assignments
         valid_mask = pl.Series(
             [s not in set(missing_subjects) for s in subject_ids]
         )
+        remaining = int(valid_mask.sum())
+        logger.warning(
+            "%d rows / %d unique subject_ids not found in split manifest. "
+            "These rows will be dropped. First 5 missing: %s. "
+            "Remaining rows: %d",
+            len(missing_subjects), len(unique_missing), unique_missing[:5],
+            remaining,
+        )
         step_context_df = step_context_df.filter(valid_mask)
+    else:
+        logger.info(
+            "All %d subject_ids found in split manifest. No rows dropped.",
+            len(set(subject_ids)),
+        )
 
     step_context_df = step_context_df.with_columns(
         pl.Series("split", split_labels)
@@ -773,6 +781,19 @@ def _run_live(args: argparse.Namespace) -> int:
         split_manifest=manifest,
         train_medians={},
     )
+    # Debug: log split distribution before fit_train_feature_medians
+    if "subject_id" in raw_state_first.columns and "split" in raw_state_first.columns:
+        split_counts = raw_state_first.group_by("split").len()
+        logger.info(
+            "raw_state_first split distribution: %s",
+            {row["split"]: row["len"] for row in split_counts.iter_rows(named=True)},
+        )
+        train_subjects_in_manifest = len(manifest.train_ids)
+        subjects_in_state = raw_state_first["subject_id"].n_unique()
+        logger.info(
+            "Manifest train_ids=%d, state unique subjects=%d",
+            train_subjects_in_manifest, subjects_in_state,
+        )
     train_medians = fit_train_feature_medians(raw_state_first, registry, manifest)
     raw_state = build_state_table(
         step_windows,
