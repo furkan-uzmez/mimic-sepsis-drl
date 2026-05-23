@@ -13,6 +13,8 @@ cd /Users/enesdemir/Documents/mimic-sepsis
 
 # Shaped replay dataset (Furkan'dan hazır)
 ls -lh data/replay/replay_train.parquet
+ls -lh data/replay/replay_validation.parquet
+ls -lh data/replay/replay_test.parquet
 
 # Kod modülleri
 ls src/mimic_sepsis_rl/evaluation/bootstrap.py
@@ -48,7 +50,8 @@ uv run python scripts/run_cql_sweep.py --stage 1
 Çalışanlar:
 - Clinician, no-treatment, behavior cloning baselines
 - 24 CQL config: tüm (reward, lr, alpha) kombinasyonları, seed=42
-- Her run 200 epoch eğitir, checkpoint'leri epoch 100/140/160/180/200'de kaydeder
+- Her run 200 epoch eğitir, checkpoint'leri her 20 epoch'ta kaydeder (keep_last_n=0: hepsi tutulur)
+- Checkpoint'ler `checkpoints/cql_sweep/cql_s{seed}_{variant}_lr{lr}_a{alpha}/` altında
 
 **Kontrol:** `cat runs/cql_sweep/stage1_manifest.json | python3 -m json.tool | head`
 
@@ -83,11 +86,11 @@ uv run python scripts/run_cql_sweep.py \
 
 ## Adım 5: Final Evaluation + Bootstrap CI
 
-~15 dakika. Tüm checkpoint'ler (24 stage1 + 24 stage2 = 48) ortak terminal utility FQE ile değerlendirilir.
+~15 dakika. Tüm checkpoint'ler (24 stage1 + 24 stage2 = 48) test split üzerinde değerlendirilir.
 Her config için bootstrap CI hesaplanır.
 
 ```bash
-uv run python scripts/evaluate_cql_sweep.py
+uv run python scripts/evaluate_cql_sweep.py --stage final
 ```
 
 **Kontrol:** `cat runs/cql_sweep/evaluation_summary.json | python3 -m json.tool | head`
@@ -96,7 +99,7 @@ uv run python scripts/evaluate_cql_sweep.py
 
 ## Adım 6: Figür ve Tablo Üretimi
 
-~5 dakika. 8 figür + 3 tablo.
+~5 dakika. 8 figür + 5 tablo.
 
 ```bash
 uv run python scripts/generate_report_figures.py
@@ -105,14 +108,14 @@ uv run python scripts/generate_report_figures.py
 **Kontrol:**
 ```bash
 ls docs/assets/report/fig*.png | wc -l   # → 8
-ls docs/assets/report/table*.csv | wc -l  # → 3
+ls docs/assets/report/table*.csv | wc -l  # → 5
 ```
 
 ---
 
 ## Sonrası: Rapor Yazımı
 
-- `docs/assets/report/` → 8 figür, 3 tablo
+- `docs/assets/report/` → 8 figür, 5 tablo
 - `docs/cql_project_report.md` → Draft rapor
 - `docs/rapor_kontrol_listesi.md` → Hocanın maddeleri + metodolojik notlar
 

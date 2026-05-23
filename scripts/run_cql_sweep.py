@@ -153,14 +153,18 @@ def _build_sweep_config(
     cfg["extra"]["cql_alpha"] = cql_alpha
 
     # --- Override checkpoint/log directories ---
+    lr_label = f"lr{learning_rate:.0e}".replace("e-0", "e-").replace("e-", "e-")
+    alpha_label = f"a{str(cql_alpha).replace('.', 'p')}"
+    run_name = f"cql_s{seed}_{variant_code}_{lr_label}_{alpha_label}"
+
     cfg.setdefault("checkpoint", {})
-    cfg["checkpoint"]["checkpoint_dir"] = "checkpoints/cql_sweep"
+    cfg["checkpoint"]["checkpoint_dir"] = f"checkpoints/cql_sweep/{run_name}"
+    cfg["checkpoint"]["save_every_n_epochs"] = 20
+    cfg["checkpoint"]["keep_last_n"] = 0  # keep all for best-checkpoint selection
 
     cfg.setdefault("logging", {})
     cfg["logging"]["log_dir"] = "runs/cql_sweep"
-    lr_label = f"lr{learning_rate:.0e}".replace("e-0", "e-").replace("e-", "e-")
-    alpha_label = f"a{str(cql_alpha).replace('.', 'p')}"
-    cfg["logging"]["experiment_name"] = f"cql_s{seed}_{variant_code}_{lr_label}_{alpha_label}"
+    cfg["logging"]["experiment_name"] = run_name
 
     # --- Store reward variant as extra metadata ---
     cfg.setdefault("extra", {})
