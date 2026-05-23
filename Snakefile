@@ -99,7 +99,9 @@ rule splits:
         f"{SPLIT_DIR}/validation_manifest.parquet",
         f"{SPLIT_DIR}/test_manifest.parquet",
     shell:
-        "python -m mimic_sepsis_rl.data.splits --config {input.config}"
+        "python -m mimic_sepsis_rl.data.splits "
+        "--config {input.config} "
+        "--source-episode-set {input.episodes} "
 
 # ---------------------------------------------------------------------------
 # Phase 5-6: Shaped replay buffer
