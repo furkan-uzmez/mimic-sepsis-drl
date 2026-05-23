@@ -41,7 +41,6 @@ from mimic_sepsis_rl.evaluation.ope import (
 from mimic_sepsis_rl.evaluation.bootstrap import bootstrap_fqe, bootstrap_wis, BootstrapCI, WISBootstrapCI
 from mimic_sepsis_rl.evaluation.ope import FrozenFQEOutputs
 from mimic_sepsis_rl.training.cql import load_cql_policy, CQLPolicy
-from mimic_sepsis_rl.training.common import CheckpointManager, CheckpointManifest
 
 logger = logging.getLogger(__name__)
 
@@ -136,15 +135,32 @@ def _compute_fqe_mean(policy: CQLPolicy, episodes: list[HeldOutEpisode]) -> floa
 # Checkpoint discovery
 # ──────────────────────────────────────────────
 
-def _find_run_checkpoints(checkpoint_root: Path, seed: int, variant_code: str) -> dict[int, Path]:
-    """Find checkpoints for one specific run by looking for its subdirectory."""
-    # Subdirectory pattern: cql_s{seed}_{variant}_{lr_label}_{alpha_label}
-    # We search for any subdir matching the seed and variant prefix
-    prefix = f"cql_s{seed}_{variant_code}_"
-    candidates: list[Path] = []
-    for sub in checkpoint_root.glob(f"{prefix}*"):
-        if sub.is_dir():
-            candidates.append(sub)
+def _find_run_checkpoints(checkpoint_root: Path, seed: int, variant_code: str,
+                         learning_rate: float = 0.0, cql_alpha: float = 0.0) -> dict[int, Path]:
+    """Find checkpoints for one specific run by looking for its subdirectory.
+
+    Directory naming: cql_s{seed}_{variant_code}_lr{lr_label}_a{alpha_label}/
+    If lr/alpha are 0 (unknown), falls back to prefix matching any subdir.
+    """
+    # Build exact directory name if we have lr/alpha
+    if learning_rate > 0 and cql_alpha > 0:
+        lr_label = f"lr{learning_rate:.0e}".replace("e-0", "e-").replace("e-", "e-")
+        alpha_label = f"a{str(cql_alpha).replace('.', 'p')}"
+        run_dir = checkpoint_root / f"cql_s{seed}_{variant_code}_{lr_label}_{alpha_label}"
+        if run_dir.is_dir():
+            candidates = [run_dir]
+        else:
+            candidates = []
+    else:
+        candidates = []
+
+    # Fallback: search by prefix if exact match not found
+    if not candidates:
+        prefix = f"cql_s{seed}_{variant_code}_"
+        for sub in sorted(checkpoint_root.glob(f"{prefix}*")):
+            if sub.is_dir():
+                candidates.append(sub)
+
     # Also check flat (old layout)
     if not candidates:
         candidates = [checkpoint_root]
@@ -161,26 +177,6 @@ def _find_run_checkpoints(checkpoint_root: Path, seed: int, variant_code: str) -
             ckpts[epoch] = p
     return ckpts
 
-
-def _find_checkpoints(checkpoint_dir: Path) -> dict[int, Path]:
-    """Return {epoch: checkpoint_path} from directory and any subdirectories."""
-    return _find_run_checkpoints(checkpoint_dir, -1, "")  # -1 matches nothing in prefix, falls to flat
-
-
-def _discover_sweep_checkpoints(sweep_dir: Path) -> dict[str, dict[int, Path]]:
-    """Walk sweep directory tree and return {run_key: {epoch: path}}."""
-    runs: dict[str, dict[int, Path]] = {}
-    # Checkpoints may be in subdirectories (if sweep script uses per-run dirs)
-    # or flat in the sweep dir
-    for ckpt_dir in sorted(sweep_dir.glob("**/")):
-        ckpts = _find_checkpoints(ckpt_dir)
-        if ckpts:
-            run_key = str(ckpt_dir.relative_to(sweep_dir)) if ckpt_dir != sweep_dir else "flat"
-            if run_key in runs:
-                runs[run_key].update(ckpts)
-            else:
-                runs[run_key] = ckpts
-    return runs
 
 
 # ──────────────────────────────────────────────
@@ -214,8 +210,8 @@ def _run_stage1_evaluation(
                      i + 1, n_total, reward, lr, alpha, seed)
 
         # Find checkpoints for this specific run
-        variant_code = {"shaped": "sofa_shaped", "sparse": "sparse"}.get(reward, reward)
-        ckpts = _find_run_checkpoints(checkpoint_root, seed, variant_code)
+        variant_code = {"shaped": "sofa_shaped", "sparse": "sparse"}.get(reward or "", reward or "shaped")
+        ckpts = _find_run_checkpoints(checkpoint_root, seed, variant_code, lr, alpha)
 
         if not ckpts:
             logger.warning("  No checkpoints found, skipping")
@@ -346,8 +342,8 @@ def _run_final_evaluation(
                      i + 1, n_total, reward, lr, alpha, seed)
 
         # Find checkpoints for this specific run
-        variant_code = {"shaped": "sofa_shaped", "sparse": "sparse"}.get(reward, reward or "shaped")
-        ckpts = _find_run_checkpoints(checkpoint_root, seed, variant_code)
+        variant_code = {"shaped": "sofa_shaped", "sparse": "sparse"}.get(reward or "", reward or "shaped")
+        ckpts = _find_run_checkpoints(checkpoint_root, seed, variant_code, lr, alpha)
 
         if not ckpts:
             results.append(EvalResult(
