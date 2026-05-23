@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Klinik olarak makul, veri sizintisina dayanikli ve yeniden uretilebilir bir offline RL benchmark'i olusturmak.
-**Current focus:** All 9 phases and 17 plans are complete. The project is a finished research benchmark — remaining work is limited to commit hygiene, LaTeX deliverables, and optional Graphify updates.
+**Current focus:** Phase 10 — CQL final multi-seed sweep with reward ablation, bootstrap CIs, support diagnostics, and project report figures.
 
 ## Current Position
 
-Phase: 9 of 9 (Evaluation, Safety, and Reproducible Package)
-Plan: 17 of 17 completed
-Status: **COMPLETE** — All roadmap phases implemented, tested, documented, and planning docs reconciled.
-Last activity: 2026-05-22 — `.planning` doc reconciliation + `.gitignore` hygiene committed
+Phase: 10 of 10 (CQL Final Evaluation and Report)
+Plan: 0 of 1 completed
+Status: **PLANNED** — Context and plan written; execution starts with new code modules, then 10-run sweep, then evaluation, then figure generation.
+Last activity: 2026-05-23 — Phase 10 planning created
 
-Progress: [██████████] 100% (9 of 9 phases complete)
+Progress: [████████░░] 90% (9 of 10 phases complete)
 
 ## Repository Snapshot
 

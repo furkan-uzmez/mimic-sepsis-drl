@@ -139,6 +139,8 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+proje_onerisi/
+proje_onerisi_cql/
 
 # PyBuilder
 .pybuilder/

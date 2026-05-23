@@ -24,7 +24,7 @@ Klinik olarak makul, veri sizintisina dayanikli ve yeniden uretilebilir bir offl
 
 ### Active
 
-(None — all v1 requirements validated)
+- [ ] CQL icin 5 seed sweepli, bootstrap CI destekli, clinician agreement + support diagnostics + 7 figurlu final rapor uretilsin.
 
 ### Out of Scope
 

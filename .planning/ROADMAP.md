@@ -27,6 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: CQL Reference Training** - Train the first conservative offline RL policy on the finalized dataset.
 - [x] **Phase 8: Comparative Offline RL Experiments** - Add BCQ/IQL runs and experiment artifacts on the same contract.
 - [x] **Phase 9: Evaluation, Safety, and Reproducible Package** - Validate model claims with OPE, safety checks, ablations, and reproducible outputs.
+- [ ] **Phase 10: CQL Final Evaluation and Report** - Multi-seed CQL sweep with reward shaping ablation, bootstrap CIs, support diagnostics, and project report figures.
 
 ## Phase Details
 
@@ -160,10 +161,24 @@ Plans:
 - [x] 09-01: Implement OPE metrics, safety checks, and evaluation protocol
 - [x] 09-02: Add ablation registry and reproducible reporting bundle
 
+### Phase 10: CQL Final Evaluation and Report
+**Goal**: A multi-seed CQL sweep with reward shaping ablation produces bootstrap-backed OPE metrics, support diagnostics, and publication-quality figures/tables for the CQL-only project report.
+**Depends on**: Phase 7, Phase 9
+**Requirements**: EVAL-01, REPR-02
+**Success Criteria** (what must be TRUE):
+  1. Researcher can run 5-seed × 2 reward variant CQL sweep with a single command.
+  2. Researcher can report FQE ± patient-level bootstrap CI, not raw point estimates.
+  3. Researcher can verify CQL stays within data support via behavior-support mass and low-support action rate.
+  4. Researcher can produce 7 figures and 3 tables ready for the project report.
+**Plans**: 1 plan
+
+Plans:
+- [ ] 10-01: Bootstrap CI infrastructure, CQL sweep, evaluation, and report figures
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -176,3 +191,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 7. CQL Reference Training | 2/2 | ✅ Complete | 2026-03-29 |
 | 8. Comparative Offline RL Experiments | 2/2 | ✅ Complete | 2026-03-29 |
 | 9. Evaluation, Safety, and Reproducible Package | 2/2 | ✅ Complete | 2026-03-29 |
+| 10. CQL Final Evaluation and Report | 0/1 | ⏳ Planned | — |

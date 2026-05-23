@@ -19,6 +19,7 @@
 | Actions | Action mapping and discretization | [docs/action_mapping.md](docs/action_mapping.md) |
 | Rewards | Reward specification | [docs/reward_spec.md](docs/reward_spec.md) |
 | Training | CQL training reference | [docs/cql_training.md](docs/cql_training.md) |
+| Training | Pipeline and RL positioning | [docs/pipeline_rl_positioning.md](docs/pipeline_rl_positioning.md) |
 | Benchmarks | Baseline benchmarks | [docs/baseline_benchmarks.md](docs/baseline_benchmarks.md) |
 | Evaluation | Evaluation protocol | [docs/evaluation_protocol.md](docs/evaluation_protocol.md) |
 | Comparison | Model comparison envelope | [docs/model_comparison.md](docs/model_comparison.md) |
