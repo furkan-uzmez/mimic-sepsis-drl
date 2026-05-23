@@ -682,11 +682,32 @@ def _run_live(args: argparse.Namespace) -> int:
     if step_context_df.is_empty():
         raise ValueError("No episode steps available after applying the requested filters.")
 
-    step_context_df = step_context_df.with_columns(
-        pl.Series(
-            "split",
-            [manifest.split_for(int(subject_id)).value for subject_id in step_context_df.get_column("subject_id").to_list()],
+    # Map subject_id to split, filtering out subjects not in manifest
+    subject_ids = step_context_df.get_column("subject_id").to_list()
+    split_labels: list[str] = []
+    missing_subjects: list[int] = []
+    for sid in subject_ids:
+        assignment = manifest.split_for(int(sid))
+        if assignment is not None:
+            split_labels.append(assignment.value)
+        else:
+            missing_subjects.append(int(sid))
+
+    if missing_subjects:
+        unique_missing = sorted(set(missing_subjects))
+        logger.warning(
+            "%d rows / %d unique subject_ids not found in split manifest. "
+            "These rows will be dropped. First 5 missing: %s",
+            len(missing_subjects), len(unique_missing), unique_missing[:5],
         )
+        # Drop rows with missing split assignments
+        valid_mask = pl.Series(
+            [s not in set(missing_subjects) for s in subject_ids]
+        )
+        step_context_df = step_context_df.filter(valid_mask)
+
+    step_context_df = step_context_df.with_columns(
+        pl.Series("split", split_labels)
     )
 
     stay_ids = step_context_df.get_column("stay_id").unique().sort().to_list()
