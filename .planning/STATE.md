@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 10 of 10 (CQL Final Evaluation and Report)
-Plan: 0 of 1 completed
-Status: **PLANNED** — Context and plan written; execution starts with new code modules, then 10-run sweep, then evaluation, then figure generation.
-Last activity: 2026-05-23 — Phase 10 planning created
+Plan: 1 of 1 completed
+Status: **COMPLETE** — Bootstrap CI module, CQL sweep orchestrator, evaluation scripts, and 7-figure + 3-table report bundle delivered.
+Last activity: 2026-05-23 — Phase 10 execution complete; all 17 evaluation tests pass
 
-Progress: [████████░░] 90% (9 of 10 phases complete)
+Progress: [██████████] 100% (10 of 10 phases complete)
 
 ## Repository Snapshot
 
@@ -72,6 +72,7 @@ src/mimic_sepsis_rl/
 | 7 | 2 | 2 | ✅ Complete |
 | 8 | 2 | 2 | ✅ Complete |
 | 9 | 2 | 2 | ✅ Complete |
+| 10 | 1 | 1 | ✅ Complete |
 
 ## Accumulated Context
 
@@ -149,6 +150,12 @@ Decisions are logged in PROJECT.md Key Decisions table. Key decisions across the
 - `docs/evaluation_protocol.md`, `docs/reproducibility.md`
 - Summaries: `09-01-SUMMARY.md`, `09-02-SUMMARY.md`
 
+**Phase 10 — CQL Final Evaluation and Report ✅**
+- `src/mimic_sepsis_rl/evaluation/bootstrap.py`
+- `scripts/run_cql_sweep.py`, `scripts/evaluate_cql_sweep.py`, `scripts/generate_report_figures.py`
+- `docs/cql_project_report.md`, `docs/assets/report/` (7 figs + 3 tables)
+- Summary: `10-01-SUMMARY.md`
+
 ### Current Workspace Notes
 
 - Working tree is clean (nothing uncommitted).
@@ -185,6 +192,6 @@ c7f7a4f artifacts: add CQL run outputs and checkpoints
 
 ## Session Continuity
 
-Last session: 2026-05-22 15:01 +03
-Stopped at: All `.planning` docs reconciled; `.gitignore` hygiene committed; clean working tree
+Last session: 2026-05-23 11:40 +03
+Stopped at: Phase 10 execution complete — all deliverables generated
 Resume file: None

@@ -27,7 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: CQL Reference Training** - Train the first conservative offline RL policy on the finalized dataset.
 - [x] **Phase 8: Comparative Offline RL Experiments** - Add BCQ/IQL runs and experiment artifacts on the same contract.
 - [x] **Phase 9: Evaluation, Safety, and Reproducible Package** - Validate model claims with OPE, safety checks, ablations, and reproducible outputs.
-- [ ] **Phase 10: CQL Final Evaluation and Report** - Multi-seed CQL sweep with reward shaping ablation, bootstrap CIs, support diagnostics, and project report figures.
+- [x] **Phase 10: CQL Final Evaluation and Report** - Multi-seed CQL sweep with reward shaping ablation, bootstrap CIs, support diagnostics, and project report figures.
 
 ## Phase Details
 
@@ -173,7 +173,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 10-01: Bootstrap CI infrastructure, CQL sweep, evaluation, and report figures
+- [x] 10-01: Bootstrap CI infrastructure, CQL sweep, evaluation, and report figures
 
 ## Progress
 
@@ -191,4 +191,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 7. CQL Reference Training | 2/2 | ✅ Complete | 2026-03-29 |
 | 8. Comparative Offline RL Experiments | 2/2 | ✅ Complete | 2026-03-29 |
 | 9. Evaluation, Safety, and Reproducible Package | 2/2 | ✅ Complete | 2026-03-29 |
-| 10. CQL Final Evaluation and Report | 0/1 | ⏳ Planned | — |
+| 10. CQL Final Evaluation and Report | 1/1 | ✅ Complete | 2026-05-23 |
