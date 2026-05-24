@@ -17,13 +17,14 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from mimic_sepsis_rl.training.common import (
+    CheckpointManager,
     EventLogger,
     MetricLogger,
     ReplayDataset,
@@ -39,7 +40,7 @@ from mimic_sepsis_rl.training.config import (
     load_training_config,
 )
 from mimic_sepsis_rl.training.cql import QNetwork
-from mimic_sepsis_rl.training.device import validate_mps_ops
+from mimic_sepsis_rl.training.device import resolve_device, validate_mps_ops
 from mimic_sepsis_rl.reporting.offline_rl import generate_training_report_artifacts
 
 logger = logging.getLogger(__name__)
@@ -185,7 +186,7 @@ class IQLPolicy:
     n_actions: int
     checkpoint_path: Path | None = None
 
-    def select_action(self, state: list[float] | torch.Tensor) -> int:
+    def select_action(self, state: Sequence[float] | torch.Tensor) -> int:
         if not isinstance(state, torch.Tensor):
             state_tensor = torch.tensor(state, dtype=torch.float32, device=self.device)
         else:
@@ -198,6 +199,21 @@ class IQLPolicy:
         with torch.no_grad():
             logits = self.policy_network(state_tensor)
         return int(logits.argmax(dim=1).item())
+
+    def action_scores(self, state: Sequence[float] | torch.Tensor) -> list[float]:
+        """Return actor logits for all discrete actions for FQE-style ranking."""
+        if not isinstance(state, torch.Tensor):
+            state_tensor = torch.tensor(state, dtype=torch.float32, device=self.device)
+        else:
+            state_tensor = state.to(self.device)
+
+        if state_tensor.dim() == 1:
+            state_tensor = state_tensor.unsqueeze(0)
+
+        self.policy_network.eval()
+        with torch.no_grad():
+            logits = self.policy_network(state_tensor)
+        return logits.squeeze(0).tolist()
 
 
 class IQLTrainer:
@@ -370,9 +386,9 @@ class IQLTrainer:
         with torch.no_grad():
             detached_values = self._value_network(batch.states).squeeze(1)
             actor_advantages = target_q - detached_values
-            actor_weights = torch.exp(self._temperature * actor_advantages).clamp(
-                max=self._max_adv_weight
-            )
+            raw_actor_weights = (self._temperature * actor_advantages).exp()
+            actor_weights = raw_actor_weights.clamp(max=self._max_adv_weight)
+            clipped_mask = raw_actor_weights > self._max_adv_weight
 
         logits = self._policy_network(batch.states)
         log_probs = F.log_softmax(logits, dim=1)
@@ -402,6 +418,9 @@ class IQLTrainer:
             "mean_v_dataset": values.mean().item(),
             "advantage_mean": advantages.mean().item(),
             "advantage_std": advantages.std(unbiased=False).item(),
+            "adv_weight_clip_fraction": clipped_mask.float().mean().item(),
+            "adv_weight_mean": actor_weights.mean().item(),
+            "adv_weight_max_raw": raw_actor_weights.max().item(),
         }
 
     def train(self) -> IQLTrainingResult:
@@ -624,6 +643,38 @@ class IQLTrainer:
             n_actions=self._n_actions,
             checkpoint_path=self._checkpoint_manager.latest_checkpoint(),
         )
+
+
+def load_iql_policy(
+    checkpoint_path: Path,
+    *,
+    state_dim: int,
+    n_actions: int = 25,
+    hidden_sizes: list[int] | None = None,
+    device: str | Any = "cpu",
+) -> IQLPolicy:
+    """Reload the actor from a saved IQL checkpoint for held-out evaluation."""
+    if isinstance(device, str):
+        torch_device, _ = resolve_device(device)
+    else:
+        torch_device = device
+
+    payload = CheckpointManager.load(checkpoint_path, device=torch_device)
+    state_dict = payload["model_state_dict"]
+    if "policy_network" not in state_dict:
+        raise KeyError("IQL checkpoint does not contain a policy_network state dict.")
+
+    policy_network = PolicyNetwork(state_dim, n_actions, hidden_sizes)
+    policy_network.load_state_dict(state_dict["policy_network"])
+    policy_network = policy_network.to(torch_device).eval()
+
+    return IQLPolicy(
+        policy_network=policy_network,
+        device=torch_device,
+        state_dim=state_dim,
+        n_actions=n_actions,
+        checkpoint_path=checkpoint_path,
+    )
 
 
 def _deep_merge(base: dict[str, Any], updates: dict[str, Any]) -> dict[str, Any]:
@@ -870,4 +921,5 @@ __all__ = [
     "IQLTrainer",
     "IQLTrainingResult",
     "expectile_loss",
+    "load_iql_policy",
 ]
