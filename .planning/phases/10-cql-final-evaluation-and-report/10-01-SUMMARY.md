@@ -16,7 +16,7 @@ provides:
   - Single-command CQL multi-seed sweep orchestrator
   - CQL checkpoint evaluation with bootstrap CIs
   - 7 publication-quality figures and 3 CSV tables
-  - IQL missing-metric evaluator and advantage-weight clipping diagnostics
+  - Expanded IQL missing-metric evaluator and advantage-weight clipping diagnostics
   - Draft CQL project report markdown
 affects: [final-report, manuscript]
 
@@ -90,8 +90,10 @@ completed: 2026-05-23
 - Multi-seed CQL sweep orchestrator (`scripts/run_cql_sweep.py`) — single command for 10 runs (5 seeds × 2 reward variants) + baselines, with temp config generation, progress tracking, and error resilience
 - CQL sweep evaluation script (`scripts/evaluate_cql_sweep.py`) — loads sweep manifest, computes FQE/WIS with bootstrap CIs, aggregates across seeds per reward variant, includes baseline comparisons
 - Complete report figure generation (`scripts/generate_report_figures.py`) — 7 figures (cohort flow, action heatmaps, training curves, episode rewards, support diagnostics, clinician agreement, reward decomposition) + 3 CSV tables + draft markdown report
-- IQL missing metrics extension (`scripts/evaluate_iql_sweep.py`) — FQE/WIS/ESS table, FQE-vs-low-support scatter, clinician-vs-policy/delta heatmaps, subgroup safety plot, seed variance plot/table, and trajectory review CSV
+- IQL missing metrics extension (`scripts/evaluate_iql_sweep.py`) — FQE/WIS/ESS table, FQE-vs-low-support scatter, clinician-vs-policy/delta heatmaps, subgroup safety plot, seed variance plot/table, bootstrap CI plot, advantage-weight histogram, episode return distribution, support/action frequency, metric correlation matrix, trajectory plot, reward decomposition, cumulative episode rewards, exact/adjacent clinician agreement, Pareto frontier, OPE ranking, action deviation severity, high-risk heatmaps, IQL training diagnostics, and trajectory review CSV
+- IQL mock artifact mode (`scripts/evaluate_iql_sweep.py --mock`) — generates the complete 21-artifact graph/table set from deterministic mock data for visual smoke tests under `runs/iql/iql_mock_evaluation/`
 - IQL trainer diagnostics (`src/mimic_sepsis_rl/training/iql.py`) — logs `adv_weight_clip_fraction`, `adv_weight_mean`, and `adv_weight_max_raw`; exposes `load_iql_policy()` for checkpoint evaluation
+- IQL graphics catalog (`docs/iql_graphics_catalog.md`) — documents normal and mock graph names, source metrics, interpretation purpose, and report-use priority
 
 ## Task Commits
 

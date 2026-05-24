@@ -170,7 +170,7 @@ Plans:
   2. Researcher can report FQE ± patient-level bootstrap CI, not raw point estimates.
   3. Researcher can verify CQL stays within data support via behavior-support mass and low-support action rate.
   4. Researcher can produce 7 figures and 3 tables ready for the project report.
-  5. Researcher can evaluate IQL checkpoints with FQE/WIS/ESS, low-support scatter, heatmaps, subgroup safety, seed variance, clipping diagnostics, and trajectory-review artifacts.
+  5. Researcher can evaluate IQL checkpoints with FQE/WIS/ESS, low-support scatter, heatmaps, subgroup safety, seed variance, clipping diagnostics, return/support/correlation plots, PDF-matched reward/agreement plots, Pareto/ranking/deviation/high-risk safety plots, training diagnostics, and trajectory-review artifacts.
 **Plans**: 1 plan
 
 Plans:

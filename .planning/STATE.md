@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 Phase: 10 of 10 (CQL Final Evaluation and Report)
 Plan: 1 of 1 completed
-Status: **COMPLETE + IQL reporting extension** — Bootstrap CI module, CQL sweep orchestrator, evaluation scripts, 7-figure + 3-table report bundle, and IQL missing-metric evaluator delivered.
-Last activity: 2026-05-24 — Added IQL advantage-weight diagnostics, checkpoint evaluator, missing metric/plot generation script, and regression tests
+Status: **COMPLETE + IQL reporting extension** — Bootstrap CI module, CQL sweep orchestrator, evaluation scripts, 7-figure + 3-table report bundle, and expanded IQL missing-metric evaluator delivered.
+Last activity: 2026-05-24 — Added `docs/iql_graphics_catalog.md` documenting normal and mock IQL graphics, their metrics, purpose, and report-use guidance
 
 Progress: [██████████] 100% (10 of 10 phases complete)
 
@@ -155,6 +155,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Key decisions across the
 - `scripts/run_cql_sweep.py`, `scripts/evaluate_cql_sweep.py`, `scripts/generate_report_figures.py`
 - `src/mimic_sepsis_rl/training/iql.py`, `scripts/evaluate_iql_sweep.py`
 - `docs/cql_project_report.md`, `docs/assets/report/` (7 figs + 3 tables)
+- `runs/iql/iql_mock_evaluation/` mock smoke-test artifacts (21 IQL tables/plots)
 - Summary: `10-01-SUMMARY.md`
 
 ### Current Workspace Notes
