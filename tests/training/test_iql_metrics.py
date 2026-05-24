@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import polars as pl
@@ -90,3 +93,36 @@ def test_load_iql_policy_restores_actor_checkpoint(tmp_path: Path) -> None:
     action = policy.select_action((0.0, 1.0))
     assert 0 <= action < 3
     assert len(policy.action_scores((0.0, 1.0))) == 3
+
+
+def test_iql_sweep_mock_mode_writes_all_metric_artifacts(tmp_path: Path) -> None:
+    output_dir = tmp_path / "mock_iql_eval"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "scripts/evaluate_iql_sweep.py",
+            "--mock",
+            "--mock-episodes",
+            "8",
+            "--mock-steps",
+            "6",
+            "--mock-checkpoints",
+            "3",
+            "--output-dir",
+            str(output_dir),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(completed.stdout)
+    summary_path = Path(payload["summary"])
+    summary = json.loads(summary_path.read_text())
+
+    assert summary["mock"] is True
+    assert summary["n_checkpoints"] == 3
+    for artifact_path in summary["artifacts"].values():
+        path = Path(artifact_path)
+        assert path.exists(), artifact_path
+        assert path.stat().st_size > 0, artifact_path
