@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 Phase: 10 of 10 (CQL Final Evaluation and Report)
 Plan: 1 of 1 completed
-Status: **COMPLETE** — Bootstrap CI module, CQL sweep orchestrator, evaluation scripts, and 7-figure + 3-table report bundle delivered.
-Last activity: 2026-05-23 — Phase 10 execution complete; all 17 evaluation tests pass
+Status: **COMPLETE + IQL reporting extension** — Bootstrap CI module, CQL sweep orchestrator, evaluation scripts, 7-figure + 3-table report bundle, and IQL missing-metric evaluator delivered.
+Last activity: 2026-05-24 — Added IQL advantage-weight diagnostics, checkpoint evaluator, missing metric/plot generation script, and regression tests
 
 Progress: [██████████] 100% (10 of 10 phases complete)
 
@@ -153,6 +153,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Key decisions across the
 **Phase 10 — CQL Final Evaluation and Report ✅**
 - `src/mimic_sepsis_rl/evaluation/bootstrap.py`
 - `scripts/run_cql_sweep.py`, `scripts/evaluate_cql_sweep.py`, `scripts/generate_report_figures.py`
+- `src/mimic_sepsis_rl/training/iql.py`, `scripts/evaluate_iql_sweep.py`
 - `docs/cql_project_report.md`, `docs/assets/report/` (7 figs + 3 tables)
 - Summary: `10-01-SUMMARY.md`
 
@@ -180,8 +181,8 @@ c7f7a4f artifacts: add CQL run outputs and checkpoints
 
 ### Pending Todos
 
+- Run `uv run python scripts/evaluate_iql_sweep.py` after `data/replay/replay_test.parquet` is available to materialize IQL evaluation artifacts.
 - (Optional) Commit BCQ training checkpoints if they exist locally.
-- (Optional) Rerun `graphify update .` and `graphify export obsidian` if Graphify is part of the final deliverable workflow.
 - (Optional) Clean up LaTeX auxiliary files in `proje_onerisi_iql/` if the PDF is final.
 
 ### Blockers/Concerns
