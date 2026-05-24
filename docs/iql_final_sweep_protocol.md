@@ -24,7 +24,7 @@ Burada:
 
 ### 2.1 Zaman Adimi
 
-Her hasta epizodu 4 saatlik klinik pencerelere ayrilir. Her pencere bir karar adimi olarak kabul edilir. Bu nedenle `t` anindaki durum, ilgili 4 saatlik pencereye kadar gozlenen klinik bilgiyi temsil eder.
+Her hasta epizodu 4 saatlik klinik pencerelere ayrilir. Her pencere bir karar adimi olarak kabul edilir. Analiz penceresi sepsis onset'inden 24 saat once baslayip 48 saat sonrasina kadar devam eder; bu nedenle tipik bir episode yaklasik 18 karar adimi icerir. Episode uzunlugu veri uygunluguna gore degisebilir. Bu nedenle `t` anindaki durum, ilgili 4 saatlik pencereye kadar gozlenen klinik bilgiyi temsil eder.
 
 ```text
 s_t -> a_t -> r_t -> s_{t+1}
@@ -32,7 +32,7 @@ s_t -> a_t -> r_t -> s_{t+1}
 
 ### 2.2 State
 
-State vektoru hastanin o andaki klinik durumunu ozetler. Projede state temsili MIMIC-IV tablolarindan turetilen vital bulgular, laboratuvarlar, tedavi gecmisi, demografik degiskenler ve turetilmis ozelliklerden olusur.
+State vektoru hastanin o andaki klinik durumunu ozetler. Projede state temsili 62 surekli/ikili klinik ozellikten olusur ve MIMIC-IV tablolarindan turetilen vital bulgular, laboratuvarlar, tedavi gecmisi, demografik degiskenler, missingness indicator'lari ve turetilmis ozellikleri kapsar.
 
 Baslica state gruplari:
 
@@ -42,7 +42,7 @@ Baslica state gruplari:
 - Demografi: yas, cinsiyet
 - Turetilmis degiskenler: PaO2/FiO2, shock index, onset sonrasi saat
 
-Her 4 saatlik pencerede birden fazla olcum varsa ozellige gore `last`, `mean`, `min`, `max`, `sum` veya `cumulative` agregasyon kurali uygulanir. Eksik veriler once episode icinde forward-fill ile, bu mumkun degilse train split uzerinden hesaplanan medyanlarla doldurulur. Bu train-only medyan kullanimi leakage engellemek icin kritiktir.
+Her 4 saatlik pencerede birden fazla olcum varsa ozellige gore `last`, `mean`, `min`, `max`, `sum` veya `cumulative` agregasyon kurali uygulanir. Eksik veriler once episode icinde forward-fill ile, bu mumkun degilse train split uzerinden hesaplanan medyanlarla doldurulur. Bu train-only medyan kullanimi leakage engellemek icin kritiktir. State temsili retrospektif modelleme icin bir yaklasimdir; hekimin yatak basi yargisi, gizli siddet, tedavi niyeti ve olculmeyen klinik degiskenler tam olarak temsil edilemez.
 
 ### 2.3 Action
 
@@ -106,6 +106,8 @@ sofa_delta_weight = -0.025
 
 Buna gore SOFA artisi kotulesme olarak negatif odul, SOFA azalisi iyilesme olarak pozitif odul uretir. Terminal odulun buyuk tutulmasi, mortalite sinyalinin shaping tarafindan bastirilmamasini saglar.
 
+Model secimi ve final raporlama icin sparse ve SOFA-shaped reward ile egitilen politikalar ayni terminal survival/death utility altinda degerlendirilmelidir. Boylece shaped ve sparse modeller farkli reward olcekleriyle secilmez; reward varyanti yalnizca egitim sinyali olarak yorumlanir.
+
 ### 2.5 Transition
 
 Transition dataset su formdaki tuple'lardan olusur:
@@ -158,6 +160,8 @@ Metadata:
 ```text
 data/replay/replay_train_meta.json
 ```
+
+Sparse replay dataset final sweep baslamadan once uretilmis olmalidir. Sparse ve SOFA-shaped replay datasetleri yalnizca reward tanimi acisindan farkli olmali; hasta splitleri, feature preprocessing, action bin esikleri, transition indexing ve terminal outcome tanimlari ayni kalmalidir. Bu esdegerlik saglanmadan reward varyantlari arasinda yapilan karsilastirma guvenilir kabul edilmemelidir.
 
 ## 4. Preprocessing
 
@@ -253,6 +257,21 @@ Validation/test uzerinde yapilacaklar:
 - Final raporlama icin test metriklerini hesaplamak
 
 Test split yalniz final raporlama icin kullanilmalidir. Hyperparameter secimi test setine bakilarak yapilmamalidir.
+
+### 6.1 Stage 0 Pre-sweep Audit
+
+Final IQL sweep baslamadan once asagidaki audit tamamlanmalidir:
+
+1. Sparse replay datasetini uret.
+2. Sparse ve SOFA-shaped replay datasetlerinde ayni patient split, preprocessing, action bin, transition indexing ve terminal outcome tanimlari kullanildigini dogrula.
+3. Action binlerinin yalniz train split uzerinde fit edildigini dogrula.
+4. Imputation, scaling, clipping ve normalization istatistiklerinin yalniz train split uzerinde fit edildigini dogrula.
+5. Validation FQE'nin ortak terminal survival/death evaluation reward ile calistigini dogrula.
+6. Temporal alignment audit'i calistir: `s_t`, `a_t`, `s_{t+1}`, `r_t` ve terminal reward ayni transition mantigina bagli olmali.
+7. Hicbir hastanin birden fazla split'te bulunmadigini dogrula.
+8. Mortality, discharge status veya gelecek outcome bilgisinin state feature'larina sizmadigini dogrula.
+
+Bu audit tamamlanmadan Stage 1 sonuclari metodolojik olarak raporlanmamalidir.
 
 ## 7. IQL Algoritmasi
 
@@ -370,26 +389,34 @@ Toplam config sayisi:
 
 Final rapor icin tek seed yeterli degildir. Offline RL egitiminde initialization, mini-batch sirasi ve stochastic optimizasyon sonucu etkileyebilir.
 
-Onerilen seedler:
+Onerilen pratik uygulama:
 
 ```text
-42, 123, 456
+Stage 1:
+  18 configs
+  seed: 42
+
+Stage 2:
+  top 5 configs
+  seeds: 123, 456
+
+Final reporting:
+  top 5 configs each with 3 seeds total
 ```
 
-Tam deney sayisi:
+Bu durumda toplam run sayisi:
 
 ```text
-18 configs x 3 seeds = 54 runs
+18 + (5 x 2) = 28 run
 ```
 
-Compute kisitliysa iki asamali strateji uygulanabilir:
+Compute biraz daha rahatsa `top 6` secilebilir:
 
 ```text
-Stage 1: 18 configs x 1 seed
-Stage 2: top 4-6 configs x 2 ek seed
+18 + (6 x 2) = 30 run
 ```
 
-Bu yaklasim once genis tarama yapar, sonra umut vadeden ayarlari farkli seedlerle dogrular.
+Bu tasarim 54 run'lik tam grid'e gore daha ekonomiktir; yine de finalist configler 3 seed ile dogrulandigi icin final raporda seed varyansi ve stabilite analizi raporlanabilir.
 
 ## 11. Hyperparameter Secim Kriteri
 
@@ -407,17 +434,29 @@ Tek bir metrikle karar verilmemelidir. Ornegin yuksek WIS ama cok dusuk ESS vars
 
 ## 12. Evaluation
 
-Final degerlendirme test split uzerinde, secilen en iyi configler icin yapilir.
+Final model secimi validation split uzerinde yapilir. Test split yalnizca final config secildikten sonra bir kez kullanilir; test sonucuna bakarak config, checkpoint veya metrik tasarimi degistirilmemelidir.
 
 Raporlanacak ana metrikler:
 
+- FQE: Fitted Q Evaluation, ortak terminal survival/death utility ile
+- Patient-level bootstrap 95% confidence interval
 - WIS: Weighted Importance Sampling
 - ESS: Effective Sample Size
-- FQE: Fitted Q Evaluation
-- Clinician agreement
+- Behavior support mass
+- Low-support action rate
+- Clinician exact-bin agreement
+- Clinician adjacent-bin agreement
 - Policy action frequency
 - Behavior support diagnostics
 - Subgroup analysis
+
+Final test karsilastirmasi asagidaki baseline'lari icermelidir:
+
+1. Clinician replay: replay datasetindeki gozlenen klinisyen aksiyonlarini degerlendirir.
+2. No-treatment policy: uygun yerlerde no-vasopressor/no-fluid bin'ini secen basit kontrol politikasi.
+3. Behavior cloning: klinisyen aksiyonlarini supervised learning ile taklit eden davranis politikasi.
+
+WIS ve ESS diagnostik metrik olarak yorumlanmalidir. Learned policy klinisyen davranisindan cok uzaklastiginda WIS yuksek varyansli olabilir; bu durumda FQE, ESS, support mass ve low-support rate birlikte raporlanmalidir.
 
 Klinik yorum icin gerekli kontroller:
 
@@ -512,7 +551,19 @@ Ornek:
 iql_sofa_shaped_actor_conservative_baseline_seed42
 ```
 
-## 16. Sonuc
+## 16. Limitations ve Etik Notlar
+
+Bu calisma klinik deployment calismasi degildir. Learned IQL politikasi gercek hasta tedavisi icin onerilmez; sonuclar yalniz retrospektif offline RL/OPE deneyi olarak yorumlanmalidir.
+
+Ana sinirlar:
+
+- Klinik surec gercekte POMDP'dir; state vektoru hekimin tam klinik bilgisini ve olculmeyen siddet/kontrendikasyon sinyallerini kapsamaz.
+- Veri retrospektif ve observational oldugu icin clinician action'lari confounding icerir.
+- Offline RL politikasi davranis verisinde zayif desteklenen aksiyonlara kayabilir; support mass ve low-support action rate bu nedenle zorunlu raporlanir.
+- FQE ve WIS prospektif klinik kanit degildir; fonksiyon yaklasimi, behavior policy tahmini ve variance varsayimlarina baglidir.
+- MIMIC-IV verisi yalniz PhysioNet credentialing, CITI training ve Data Use Agreement kapsaminda kullanilmalidir; hasta verileri de-identified olsa da raporlama akademik ve etik sinirlar icinde kalmalidir.
+
+## 17. Sonuc
 
 Bu protokol, CQL final sweep'e benzer sekilde IQL icin sistematik ve savunulabilir bir hiperparametre taramasi tanimlar. CQL'deki `cql_alpha` yerine IQL'de `expectile` ve `temperature` birlikte taranir. Learning rate ise IQL'in actor, critic ve value bilesenleri ayri oldugu icin tek sayi yerine LR regime olarak ele alinir.
 
