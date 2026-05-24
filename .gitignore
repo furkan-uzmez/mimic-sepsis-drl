@@ -245,3 +245,6 @@ pyrightconfig.json
 .git-workflow/
 
 /data/
+
+# Generated IQL mock evaluation artifacts
+/runs/iql/iql_mock_evaluation/
