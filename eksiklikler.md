@@ -65,13 +65,9 @@ Final IQL grid su kombinasyonlardan olusuyor:
 
 Bu grid'i otomatik genisleten, her config icin gecici training YAML/manifest olusturan ve run isimlerini standartlastiran kod hazir degil.
 
-### 3. En bastan butun adimlari kapsayan Snakefile yok
+### 3. IQL final akisini kapsayan Snakefile yok
 
-Eksik dosya:
-
-```text
-Snakefile
-```
+Mevcut repo kokunde `Snakefile` var; ancak CQL sweep odakli ve `runs/cql_sweep`, `scripts/run_cql_sweep.py`, `scripts/evaluate_cql_sweep.py` hedeflerini kullaniyor. Bu nedenle IQL final sweep protokolunu kapsayan Snakefile hazir degil.
 
 Snakefile yalniz 18 config'i denememeli; veri artifact uretiminden final rapora kadar tum final IQL akisini dosya tabanli DAG olarak kapsamalidir.
 
@@ -319,7 +315,43 @@ reward-trained policy -> common terminal evaluation reward -> validation FQE/WIS
 
 Bu baglanti IQL Stage 1/Stage 2 pipeline'inda net olarak hazir degil.
 
-### 11. Stage 0 audit script'i yok
+### 11. CUDA/GPU zorunlu calisma ve dogrulama yok
+
+Final IQL sweep CPU fallback ile sessizce calismamali. Egitim ve evaluation pipeline'i CUDA destekli GPU kullanacak sekilde ayarlanmali ve bunu baslamadan once kesin olarak dogrulamalidir.
+
+Eksik islev:
+
+```text
+CUDA kullanilabilirligini dogrula: torch.cuda.is_available() == True
+GPU cihaz adini, CUDA runtime surumunu ve PyTorch CUDA build bilgisini logla
+IQL trainer device secimini acikca cuda olarak ayarla
+CPU fallback'i final sweep icin hata say
+Her run manifestine device, gpu_name, cuda_version, torch_version yaz
+Snakemake/runner basinda GPU preflight check calistir
+```
+
+Zorunlu kabul kriteri:
+
+```text
+Final IQL sweep, CUDA/GPU dogrulamasi gecmeden Stage 1 veya Stage 2 egitimine baslamamalidir.
+GPU yoksa veya PyTorch CUDA surumu/driver uyumsuzsa script acik hata ile durmalidir.
+Mock mode haricinde CPU fallback kabul edilmemelidir.
+```
+
+Minimum dogrulama:
+
+```bash
+uv run python - <<'PY'
+import torch
+assert torch.cuda.is_available(), 'CUDA GPU bulunamadi veya kullanilamiyor'
+print(torch.cuda.get_device_name(0))
+print(torch.version.cuda)
+PY
+```
+
+Not: mevcut test calistirmasinda PyTorch CUDA driver uyari mesaji uretti; bu final sweep oncesi giderilmeli ve GPU dogrulamasi yesil olmadan gercek egitim baslatilmamalidir.
+
+### 12. Stage 0 audit script'i yok
 
 Testlerde split leakage, episode grid ve preprocessing kontrolleri mevcut; ancak protokoldeki Stage 0 Pre-sweep Audit'i repo artifactleri uzerinde tek komutla calistiran script yok.
 
@@ -342,7 +374,7 @@ Bu script sunlari kontrol etmeli:
 - split leakage var mi?
 - mortality/discharge/future outcome state feature'larina sizmis mi?
 
-### 12. Gercek data artifactleri checkout'ta yok
+### 13. Gercek data artifactleri checkout'ta yok
 
 Eksik artifactler:
 
@@ -359,7 +391,7 @@ data/splits/split_summary.json
 
 Bu dosyalar olmadan final IQL sweep gercek veri uzerinde baslatilamaz.
 
-### 13. Final test + baseline comparison pipeline yok
+### 14. Final test + baseline comparison pipeline yok
 
 Baseline modulleri var, ancak final selected IQL checkpoint ile su karsilastirmayi tek rapor halinde yapan script hazir degil:
 
@@ -378,19 +410,177 @@ FQE/WIS/ESS/support/agreement/action heatmap karsilastirmasi
 CSV/JSON/figure raporu
 ```
 
-## Onceliklendirilmis Yapilacaklar
+## 4 Phase Uygulama Plani
+
+Bu eksikler tek session'da uygulanmamali. En guvenli yol, artifact kontratlari ve testleri net olacak sekilde 4 ayri phase halinde ilerlemektir.
+
+### Phase 1 — Data Artifact + Pre-sweep Audit
+
+Amac: Final sweep baslamadan once replay datasetlerinin, splitlerin ve leakage kontrollerinin guvenli oldugunu kanitlamak.
+
+Kapsam:
+
+1. Gercek replay/split artifactlerini uret ve dogrula.
+2. Sparse replay datasetini uret: `data/replay_sparse/replay_{split}.parquet`.
+3. SOFA-shaped replay datasetini uret: `data/replay/replay_{split}.parquet`.
+4. `scripts/audit_iql_presweep.py` yaz.
+5. Sparse ve SOFA-shaped replay datasetlerinde ayni patient split, preprocessing, action bin, transition indexing ve terminal outcome tanimlari kullanildigini dogrula.
+6. Action binlerinin yalniz train split uzerinde fit edildigini dogrula.
+7. Imputation, scaling, clipping ve normalization istatistiklerinin yalniz train split uzerinde fit edildigini dogrula.
+8. Temporal alignment audit'i calistir: `s_t`, `a_t`, `s_{t+1}`, `r_t` ve terminal reward ayni transition mantigina bagli olmali.
+9. Hicbir hastanin birden fazla split'te bulunmadigini dogrula.
+10. Mortality, discharge status veya gelecek outcome bilgisinin state feature'larina sizmadigini dogrula.
+
+Ciktilar:
+
+```text
+data/replay/replay_train.parquet
+data/replay/replay_validation.parquet
+data/replay/replay_test.parquet
+data/replay_sparse/replay_train.parquet
+data/replay_sparse/replay_validation.parquet
+data/replay_sparse/replay_test.parquet
+data/splits/train_manifest.parquet
+data/splits/validation_manifest.parquet
+data/splits/test_manifest.parquet
+data/splits/split_summary.json
+results/iql_final/audit/presweep_audit.json
+```
+
+Minimum dogrulama:
+
+```bash
+uv run python -m pytest tests/datasets/test_build_transitions_cli.py tests/data/test_split_manifests.py tests/mdp/test_preprocessing.py tests/datasets/test_transitions.py -q
+uv run python scripts/audit_iql_presweep.py
+```
+
+### Phase 2 — IQL Sweep Runner + Grid + Mock Snakefile
+
+Amac: 18-config IQL Stage 1 ve final-6 Stage 2 akisini deterministik, test edilebilir ve mock modda hizli calisabilir hale getirmek.
+
+Kapsam:
 
 1. `scripts/run_iql_sweep.py` yaz.
-2. IQL 18-config grid generator ekle.
-3. En bastan butun adimlari kapsayan `Snakefile` olustur.
+2. 18-config grid generator ekle.
+3. Her config icin gecici training YAML/manifest uret.
 4. Stage 1 seed-42 runner ve manifest uretimini ekle.
-5. Validation evaluator + final-6 selector ekle.
-6. Stage 2 extra-seed runner ekle.
-7. Gercek FQE ve FQE bootstrap'i IQL evaluator'a entegre et.
-8. Common terminal survival/death utility ile model selection'i zorunlu hale getir.
-9. Stage 0 pre-sweep audit script'i yaz.
-10. Final test + baseline comparison script'i yaz.
-11. Gercek replay/split artifactlerini uret ve audit'ten gecir.
+5. Stage 2 extra-seed runner iskeletini ekle.
+6. CUDA/GPU preflight check ekle; mock mode haricinde CPU fallback'i hata say.
+7. IQL trainer ve sweep runner device ayarini acikca `cuda` kullanacak sekilde bagla.
+8. Her run manifestine `device`, `gpu_name`, `cuda_version`, `torch_version` alanlarini yaz.
+9. En bastan butun adimlari kapsayan `Snakefile` olustur.
+10. Snakefile icin mock veya mini synthetic data modu ekle.
+11. Gercek MIMIC artifactleri olmadan DAG'in yapisal olarak calistigini dogrula.
+12. Uzun egitim yerine mock IQL checkpoint/evaluation ciktilari ureten hizli rule veya script ekle.
+
+Ciktilar:
+
+```text
+scripts/run_iql_sweep.py
+Snakefile
+results/iql_final/stage1/grid_manifest.json
+results/iql_final/stage1/runs/{config_id}/seed_42/checkpoint.pt
+results/iql_final/stage1/runs/{config_id}/seed_42/train_metrics.json
+results/iql_final/stage2/finalists_manifest.json
+```
+
+Minimum dogrulama:
+
+```bash
+uv run python -m pytest tests/training/test_iql_metrics.py -q
+uv run python - <<'PY'
+import torch
+assert torch.cuda.is_available(), 'CUDA GPU bulunamadi veya kullanilamiyor'
+print(torch.cuda.get_device_name(0))
+print(torch.version.cuda)
+PY
+uv run snakemake -n --cores 1
+uv run snakemake --cores 1 --config mock=true
+```
+
+### Phase 3 — Real Evaluation + Final-6 Selection
+
+Amac: Model selection'i proxy skor yerine ortak terminal survival/death evaluation reward ile calisan gercek validation FQE/OPE katmanina baglamak.
+
+Kapsam:
+
+1. Gercek FQE entegrasyonunu ekle.
+2. FQE bootstrap entegrasyonunu ekle.
+3. Common terminal survival/death utility ile model selection'i zorunlu hale getir.
+4. Validation evaluator'i Stage 1 checkpointleri icin calistir.
+5. Final-6 selector ekle.
+6. Hard gate, composite score, safety/support score, diversity ve baseline anchor kurallarini uygula.
+7. Secim gerekcesini manifest/CSV olarak yaz.
+
+Ciktilar:
+
+```text
+results/iql_final/stage1/evaluation/{config_id}/validation_metrics.json
+results/iql_final/stage1/evaluation/{config_id}/fqe_bootstrap.json
+results/iql_final/stage1/selection/final6_configs.csv
+results/iql_final/stage1/selection/final6_manifest.json
+results/iql_final/stage1/selection/selection_rationale.md
+```
+
+Minimum dogrulama:
+
+```bash
+uv run python -m pytest tests/evaluation/test_bootstrap.py tests/evaluation/test_ope_pipeline.py tests/evaluation/test_safety_checks.py -q
+uv run python scripts/evaluate_iql_sweep.py --stage 1 --mock
+```
+
+### Phase 4 — Stage 2 Confirmation + Final Report Bundle
+
+Amac: Final-6 adaylarini 3 seed ile dogrulamak, final selected IQL checkpoint'i baseline'larla karsilastirmak ve raporlanabilir artifact bundle uretmek.
+
+Kapsam:
+
+1. Final 6 config'i seed 123 ve 456 ile tekrar egit; seed 42 run'ini yeniden kullan.
+2. Her finalist config icin toplam 3 seedlik sonuc uret.
+3. Stage 2 finalist sonuclarini ozet manifestte topla.
+4. Final selected IQL checkpoint'i belirle.
+5. Final test + baseline comparison script'i yaz.
+6. Selected IQL policy, clinician replay, no-treatment policy ve behavior cloning baseline'larini ayni test split uzerinde karsilastir.
+7. FQE/WIS/ESS/support/agreement/action heatmap karsilastirmasi uret.
+8. CSV/JSON/figure/report bundle uret.
+9. Snakefile `rule all` final hedeflerinin tamamlandigini dogrula.
+
+Ciktilar:
+
+```text
+results/iql_final/stage2/finalists_manifest.json
+results/iql_final/stage2/seed_summary.csv
+results/iql_final/final_metrics.json
+results/iql_final/final_comparison.csv
+results/iql_final/final_report.md
+results/iql_final/figures/fqe_vs_support.png
+results/iql_final/figures/seed_variance.png
+results/iql_final/figures/action_heatmap.png
+results/iql_final/figures/baseline_comparison.png
+results/iql_final/figures/bootstrap_ci.png
+```
+
+Minimum dogrulama:
+
+```bash
+uv run python -m pytest tests/baselines/test_baselines.py tests/evaluation/test_bootstrap.py tests/reporting/test_offline_rl_reporting.py -q
+uv run snakemake -n --cores 1
+uv run snakemake --cores 1 --config mock=true
+```
+
+## Phase Bagimliliklari
+
+```text
+Phase 1 -> Phase 2 -> Phase 3 -> Phase 4
+```
+
+Kurallar:
+
+- Phase 2 gercek veri uzerinde baslamadan once Phase 1 audit gecmeli.
+- Phase 3 baslamadan once Stage 1 checkpoint/output kontratlari Phase 2'de netlesmeli.
+- Phase 4 baslamadan once Final-6 selector Phase 3'te manifest uretmeli.
+- Snakefile mock mode Phase 2'de gecmeden gercek sweep baslatilmamali.
+- Final iddia sadece Phase 4'te 3 seed ve CI ile raporlanmali.
 
 ## Kisa Sonuc
 
