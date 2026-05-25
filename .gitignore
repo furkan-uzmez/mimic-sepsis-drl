@@ -9,6 +9,11 @@ wheels/
 graphify-out
 commit_history
 proje_onerisi_iql
+.snakemake/
+checkpoints/iql_final/
+results/iql_final/
+results/iql_final_mock_backup/
+mimic/
 
 # Virtual environments
 .venv
