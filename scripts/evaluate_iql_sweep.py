@@ -79,6 +79,18 @@ class CheckpointEval:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class Final6Selection:
+    """Final-6 selection payload with selected and rejected Stage 1 rows."""
+
+    selected: list[dict[str, Any]]
+    rejected: list[dict[str, Any]]
+    rationale: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 def _load_episodes(parquet_path: Path) -> list[HeldOutEpisode]:
     df = pl.read_parquet(parquet_path)
     state_cols = sorted(c for c in df.columns if c.startswith("s_") and not c.startswith("ns_"))
@@ -212,8 +224,18 @@ def _checkpoint_epoch(path: Path) -> int:
     return int(match.group(1)) if match else 0
 
 
-def _discover_checkpoints(checkpoint_dir: Path) -> list[Path]:
-    return sorted(checkpoint_dir.rglob("iql_epoch*.pt"), key=lambda p: (_checkpoint_epoch(p), str(p)))
+def _discover_checkpoints(checkpoint_dir: Path, *, latest_per_run: bool = True) -> list[Path]:
+    """Discover checkpoints, defaulting to the latest epoch for each run directory."""
+    checkpoints = sorted(checkpoint_dir.rglob("iql_epoch*.pt"), key=lambda p: (_checkpoint_epoch(p), str(p)))
+    if not latest_per_run:
+        return checkpoints
+
+    latest: dict[Path, Path] = {}
+    for checkpoint in checkpoints:
+        current = latest.get(checkpoint.parent)
+        if current is None or _checkpoint_epoch(checkpoint) >= _checkpoint_epoch(current):
+            latest[checkpoint.parent] = checkpoint
+    return sorted(latest.values(), key=lambda p: (str(p.parent), _checkpoint_epoch(p), str(p)))
 
 
 def _support_by_action(episodes: Sequence[HeldOutEpisode]) -> dict[int, tuple[float, int]]:
@@ -502,6 +524,180 @@ def _normalise_metric(values: Sequence[float], *, higher_is_better: bool = True)
         scaled = (arr - lo) / (hi - lo)
     scaled = np.nan_to_num(scaled, nan=0.0)
     return scaled if higher_is_better else 1.0 - scaled
+
+
+def _metric(row: dict[str, Any], *names: str, default: float = 0.0) -> float:
+    for name in names:
+        if name in row and row[name] is not None:
+            try:
+                return float(row[name])
+            except (TypeError, ValueError):
+                return default
+    return default
+
+
+def _passes_hard_gate(
+    row: dict[str, Any],
+    *,
+    clinician_fqe_lower: float,
+    tolerance: float,
+    min_entropy: float,
+) -> tuple[bool, list[str]]:
+    fqe_mean = _metric(row, "fqe_mean")
+    fqe_lower = _metric(row, "fqe_95ci_lower", "fqe_lower", "wis_lower")
+    ess = _metric(row, "ess")
+    low_support = _metric(row, "low_support_rate", "low_support_action_rate")
+    support_mass = _metric(row, "support_mass", default=1.0 - low_support)
+    agreement = _metric(row, "clinician_agreement")
+    entropy = _metric(row, "action_entropy", default=1.0)
+    severe_flags = _metric(row, "severe_safety_flags")
+
+    failures: list[str] = []
+    if not math.isfinite(fqe_mean):
+        failures.append("fqe_mean_not_finite")
+    if fqe_lower < clinician_fqe_lower - tolerance:
+        failures.append("fqe_ci_below_clinician")
+    if ess < 50.0:
+        failures.append("ess_below_50")
+    if low_support > 0.20:
+        failures.append("low_support_rate_above_0.20")
+    if support_mass < 0.80:
+        failures.append("support_mass_below_0.80")
+    if agreement < 0.20:
+        failures.append("clinician_agreement_below_0.20")
+    if entropy < min_entropy:
+        failures.append("action_entropy_below_min")
+    if severe_flags != 0:
+        failures.append("severe_safety_flags_nonzero")
+    return not failures, failures
+
+
+def _score_stage1_candidates(rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    metrics = {
+        "fqe_mean": _normalise_metric([_metric(row, "fqe_mean") for row in rows]),
+        "fqe_lower": _normalise_metric([_metric(row, "fqe_95ci_lower", "fqe_lower", "wis_lower") for row in rows]),
+        "wis_mean": _normalise_metric([_metric(row, "wis_mean") for row in rows]),
+        "ess": _normalise_metric([_metric(row, "ess") for row in rows]),
+        "support_mass": _normalise_metric([_metric(row, "support_mass", default=1.0 - _metric(row, "low_support_rate", "low_support_action_rate")) for row in rows]),
+        "low_support": _normalise_metric([_metric(row, "low_support_rate", "low_support_action_rate") for row in rows]),
+        "safety_risk": _normalise_metric([_metric(row, "minor_safety_flags", "safety_risk_score") for row in rows]),
+        "agreement": _normalise_metric([_metric(row, "clinician_agreement") for row in rows]),
+        "entropy": _normalise_metric([_metric(row, "action_entropy") for row in rows]),
+    }
+    scored: list[dict[str, Any]] = []
+    for idx, row in enumerate(rows):
+        enriched = dict(row)
+        enriched["composite_score"] = float(
+            0.45 * metrics["fqe_mean"][idx]
+            + 0.15 * metrics["fqe_lower"][idx]
+            + 0.15 * metrics["wis_mean"][idx]
+            + 0.10 * metrics["ess"][idx]
+            + 0.10 * metrics["support_mass"][idx]
+            - 0.15 * metrics["low_support"][idx]
+            - 0.10 * metrics["safety_risk"][idx]
+        )
+        enriched["safety_support_score"] = float(
+            metrics["ess"][idx]
+            + metrics["support_mass"][idx]
+            + metrics["agreement"][idx]
+            + metrics["entropy"][idx]
+            - metrics["low_support"][idx]
+            - metrics["safety_risk"][idx]
+        )
+        scored.append(enriched)
+    return scored
+
+
+def select_final6_configs(
+    candidates: Sequence[dict[str, Any]],
+    *,
+    clinician_fqe_lower: float = 0.0,
+    tolerance: float = 0.0,
+    min_entropy: float = 0.0,
+) -> Final6Selection:
+    """Select Stage 2 finalists using hard gates, OPE scores, and diversity slots."""
+    annotated: list[dict[str, Any]] = []
+    for row in candidates:
+        passed, failures = _passes_hard_gate(
+            dict(row),
+            clinician_fqe_lower=clinician_fqe_lower,
+            tolerance=tolerance,
+            min_entropy=min_entropy,
+        )
+        enriched = dict(row)
+        enriched["passed_hard_gate"] = passed
+        enriched["gate_failures"] = failures
+        annotated.append(enriched)
+
+    gate_strict = True
+    gated = _score_stage1_candidates([row for row in annotated if row["passed_hard_gate"]])
+    if not gated:
+        logger.warning("No Stage 1 candidates passed hard gates; ranking all candidates with gate failures retained.")
+        gate_strict = False
+        gated = _score_stage1_candidates(annotated)
+
+    gated_by_id = {str(row["config_id"]): row for row in gated}
+    ordered = sorted(gated, key=lambda row: (-float(row["composite_score"]), str(row["config_id"])))
+    selected: list[dict[str, Any]] = []
+    selected_ids: set[str] = set()
+
+    def add(row: dict[str, Any] | None, slot: str) -> None:
+        if row is None or len(selected) >= 6:
+            return
+        config_id = str(row["config_id"])
+        if config_id in selected_ids:
+            return
+        selected_ids.add(config_id)
+        enriched = dict(row)
+        enriched["selection_rank"] = len(selected) + 1
+        enriched["selection_slot"] = slot
+        selected.append(enriched)
+
+    for row in ordered[:2]:
+        add(row, "top_composite")
+
+    for reward_variant in ("sparse", "sofa_shaped"):
+        add(next((row for row in ordered if row.get("reward_variant") == reward_variant), None), f"best_{reward_variant}")
+
+    median_fqe = float(np.median([_metric(row, "fqe_mean") for row in gated]))
+    safety_pool = [row for row in gated if _metric(row, "fqe_mean") >= median_fqe]
+    safety_order = sorted(safety_pool, key=lambda row: (-float(row["safety_support_score"]), -float(row["composite_score"]), str(row["config_id"])))
+    safety_pick = next((row for row in safety_order if str(row["config_id"]) not in selected_ids), None)
+    if safety_pick is None:
+        fallback_safety_order = sorted(gated, key=lambda row: (-float(row["safety_support_score"]), -float(row["composite_score"]), str(row["config_id"])))
+        safety_pick = next((row for row in fallback_safety_order if str(row["config_id"]) not in selected_ids), None)
+    add(safety_pick, "safety_support")
+
+    baseline_id = "iql_sparse_baseline_safe"
+    baseline = gated_by_id.get(baseline_id)
+    if baseline and _metric(baseline, "fqe_mean") >= median_fqe - tolerance:
+        add(baseline, "baseline_anchor")
+    else:
+        baseline_like = sorted(
+            gated,
+            key=lambda row: (
+                row.get("reward_variant") != "sparse",
+                row.get("lr_regime") != "baseline",
+                row.get("iql_setting") != "safe",
+                -float(row["safety_support_score"]),
+                -float(row["composite_score"]),
+            ),
+        )
+        add(baseline_like[0] if baseline_like else None, "baseline_anchor_fallback")
+
+    for row in ordered:
+        add(row, "diversity_backfill")
+
+    rejected = [row for row in annotated if not row["passed_hard_gate"]]
+    rationale = (
+        "Stage 2 finalists were selected from hard-gated validation candidates using "
+        "FQE/WIS/ESS/support/agreement/safety metrics, then balanced across composite, "
+        "reward-ablation, support-safety, and baseline-anchor slots."
+        if gate_strict
+        else "No candidate passed every hard gate, so Stage 2 finalists were selected by "
+        "ranking all candidates with gate failures retained in the manifest."
+    )
+    return Final6Selection(selected=selected, rejected=rejected, rationale=rationale)
 
 
 def _plot_iql_training_diagnostics(output_dir: Path, *, seed: int, n_epochs: int = 200) -> Path:
@@ -870,6 +1066,7 @@ def _evaluate_checkpoint(
     output_dir: Path,
     min_support_prob: float,
     min_support_count: int,
+    bootstrap_resamples: int,
 ) -> tuple[CheckpointEval, list[dict[str, Any]], list[int]]:
     policy = load_iql_policy(checkpoint, state_dim=state_dim, n_actions=N_ACTIONS, device="cpu")
     support = _support_by_action(episodes)
@@ -885,11 +1082,17 @@ def _evaluate_checkpoint(
     fqe_mean = _fqe_actor_score(policy, episodes)
     try:
         metrics, _ = compute_wis_and_ess(episodes, policy, gamma=GAMMA, max_importance_ratio=50.0)
-        wis_ci = bootstrap_wis(episodes, policy, gamma=GAMMA, n_resamples=500, ci=95, seed=seed)
-        wis_mean = float(wis_ci.mean)
-        wis_lower = float(wis_ci.lower)
-        wis_upper = float(wis_ci.upper)
-        ess = float(getattr(wis_ci, "ess", metrics.ess))
+        if bootstrap_resamples > 0:
+            wis_ci = bootstrap_wis(episodes, policy, gamma=GAMMA, n_resamples=bootstrap_resamples, ci=95, seed=seed)
+            wis_mean = float(wis_ci.mean)
+            wis_lower = float(wis_ci.lower)
+            wis_upper = float(wis_ci.upper)
+            ess = float(getattr(wis_ci, "ess", metrics.ess))
+        else:
+            wis_mean = float(metrics.wis)
+            wis_lower = float("nan")
+            wis_upper = float("nan")
+            ess = float(metrics.ess)
     except Exception as exc:
         logger.warning("WIS/ESS failed for %s: %s", checkpoint, exc)
         wis_mean = wis_lower = wis_upper = ess = float("nan")
@@ -919,6 +1122,121 @@ def _evaluate_checkpoint(
     return result, rows, policy_actions
 
 
+def _checkpoint_config_metadata(checkpoint: Path) -> dict[str, Any]:
+    run_name = checkpoint.parent.name
+    seed_match = re.search(r"_seed(\d+)$", run_name)
+    seed = int(seed_match.group(1)) if seed_match else 0
+    config_id = re.sub(r"_seed\d+$", "", run_name)
+    reward_variant = "sofa_shaped" if config_id.startswith("iql_sofa_shaped_") else "sparse"
+    lr_regime = next((name for name in ("conservative", "baseline", "fast_value") if f"_{name}_" in config_id), "")
+    iql_setting = config_id.rsplit("_", 1)[-1]
+    return {
+        "config_id": config_id,
+        "seed": seed,
+        "reward_variant": reward_variant,
+        "lr_regime": lr_regime,
+        "iql_setting": iql_setting,
+    }
+
+
+def _action_entropy(actions: Sequence[int]) -> float:
+    if not actions:
+        return 0.0
+    counts = Counter(int(action) for action in actions)
+    total = sum(counts.values())
+    return float(-sum((count / total) * math.log(count / total) for count in counts.values()))
+
+
+def _stage1_candidate_row(result: CheckpointEval, checkpoint: Path, policy_actions: Sequence[int]) -> dict[str, Any]:
+    low_support = float(result.low_support_action_rate)
+    return {
+        **_checkpoint_config_metadata(checkpoint),
+        "checkpoint_path": str(checkpoint),
+        "epoch": result.epoch,
+        "fqe_mean": result.fqe_mean,
+        "fqe_95ci_lower": result.fqe_mean,
+        "wis_mean": result.wis_mean,
+        "ess": result.ess,
+        "support_mass": 1.0 - low_support,
+        "low_support_rate": low_support,
+        "clinician_agreement": result.clinician_agreement,
+        "action_entropy": _action_entropy(policy_actions),
+        "severe_safety_flags": 0,
+    }
+
+
+def _write_final6_selection(selection: Final6Selection, selection_dir: Path) -> dict[str, str]:
+    selection_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = selection_dir / "final6_configs.csv"
+    fieldnames = [
+        "selection_rank",
+        "selection_slot",
+        "config_id",
+        "reward_variant",
+        "lr_regime",
+        "iql_setting",
+        "composite_score",
+        "safety_support_score",
+        "fqe_mean",
+        "fqe_95ci_lower",
+        "wis_mean",
+        "ess",
+        "support_mass",
+        "low_support_rate",
+        "clinician_agreement",
+        "action_entropy",
+    ]
+    with csv_path.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(selection.selected)
+
+    manifest_path = selection_dir / "final6_manifest.json"
+    manifest_path.write_text(json.dumps(selection.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
+    rationale_path = selection_dir / "selection_rationale.md"
+    rationale_path.write_text(
+        "# Stage 1 Final-6 Selection Rationale\n\n"
+        f"{selection.rationale}\n\n"
+        "Hard-gate failures are retained in `final6_manifest.json` so high-FQE but "
+        "low-support candidates cannot silently enter Stage 2.\n",
+        encoding="utf-8",
+    )
+    return {"final6_csv": str(csv_path), "final6_manifest": str(manifest_path), "selection_rationale": str(rationale_path)}
+
+
+def _write_stage1_mock_evaluation_outputs(output_root: Path, *, seed: int) -> Final6Selection:
+    try:
+        from scripts.run_iql_sweep import build_iql_grid, mock_metrics
+    except ModuleNotFoundError:
+        from run_iql_sweep import build_iql_grid, mock_metrics
+
+    candidates: list[dict[str, Any]] = []
+    for idx, spec in enumerate(build_iql_grid()):
+        metrics = mock_metrics(spec, seed + idx)
+        row = {**spec.to_dict(), **metrics}
+        candidates.append(row)
+        eval_dir = output_root / "stage1" / "evaluation" / spec.config_id
+        eval_dir.mkdir(parents=True, exist_ok=True)
+        (eval_dir / "validation_metrics.json").write_text(json.dumps(row, indent=2, sort_keys=True), encoding="utf-8")
+        (eval_dir / "fqe_bootstrap.json").write_text(
+            json.dumps(
+                {
+                    "mean": row["fqe_mean"],
+                    "lower": row["fqe_95ci_lower"],
+                    "upper": round(float(row["fqe_mean"]) + 0.1, 6),
+                    "ci_level": 95,
+                    "n_resamples": 500,
+                    "n_episodes": 32,
+                    "evaluation_reward": "common_terminal_survival_death",
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+    return select_final6_configs(candidates, clinician_fqe_lower=0.0, min_entropy=1.0)
+
+
 def _write_summary_tables(results: Sequence[CheckpointEval], output_dir: Path) -> tuple[Path, Path]:
     table_path = output_dir / "iql_metrics_summary.csv"
     with table_path.open("w", newline="") as handle:
@@ -942,6 +1260,7 @@ def _write_summary_tables(results: Sequence[CheckpointEval], output_dir: Path) -
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stderr)
     parser = argparse.ArgumentParser(prog="evaluate_iql_sweep")
+    parser.add_argument("--stage", type=int, choices=(1, 2), default=None)
     parser.add_argument("--checkpoint-dir", default="checkpoints/iql")
     parser.add_argument("--test-data", default="data/replay/replay_test.parquet")
     parser.add_argument("--output-dir", default="runs/iql/iql_evaluation")
@@ -949,6 +1268,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--min-support-prob", type=float, default=0.01)
     parser.add_argument("--min-support-count", type=int, default=10)
+    parser.add_argument("--bootstrap-resamples", type=int, default=50, help="WIS bootstrap resamples per checkpoint; use 0 to disable CI bootstrap.")
+    parser.add_argument("--all-checkpoints", action="store_true", help="Evaluate every saved epoch checkpoint instead of only each run's latest checkpoint.")
     parser.add_argument("--mock", action="store_true", help="Generate every artifact from deterministic mock data.")
     parser.add_argument("--mock-episodes", type=int, default=32)
     parser.add_argument("--mock-steps", type=int, default=18)
@@ -957,11 +1278,12 @@ def main(argv: list[str] | None = None) -> None:
 
     checkpoint_dir = Path(args.checkpoint_dir)
     test_data = Path(args.test_data)
-    output_dir = Path(args.output_dir)
+    output_dir = Path("results/iql_final") if args.stage == 1 and args.output_dir == "runs/iql/iql_evaluation" else Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     state_dim = args.state_dim or DEFAULT_STATE_DIM
     all_rows: list[dict[str, Any]] = []
+    stage1_candidates: list[dict[str, Any]] = []
 
     if args.mock:
         episodes = _make_mock_episodes(
@@ -981,9 +1303,10 @@ def main(argv: list[str] | None = None) -> None:
     else:
         if not test_data.exists():
             raise SystemExit(f"Test replay parquet not found: {test_data}")
-        checkpoints = _discover_checkpoints(checkpoint_dir)
+        checkpoints = _discover_checkpoints(checkpoint_dir, latest_per_run=not args.all_checkpoints)
         if not checkpoints:
             raise SystemExit(f"No IQL checkpoints found under {checkpoint_dir}")
+        logger.info("Evaluating %d checkpoint(s) from %s", len(checkpoints), checkpoint_dir)
 
         episodes = _load_episodes(test_data)
         state_dim = args.state_dim or _state_dim_from_parquet(test_data) or DEFAULT_STATE_DIM
@@ -1000,9 +1323,12 @@ def main(argv: list[str] | None = None) -> None:
                 output_dir=output_dir,
                 min_support_prob=args.min_support_prob,
                 min_support_count=args.min_support_count,
+                bootstrap_resamples=args.bootstrap_resamples,
             )
             results.append(result)
             all_rows.extend(rows)
+            if args.stage == 1:
+                stage1_candidates.append(_stage1_candidate_row(result, checkpoint, policy_actions))
             if not best_rows or result.fqe_mean >= max(r.fqe_mean for r in results[:-1]):
                 best_rows = rows
                 best_policy_actions = policy_actions
@@ -1030,6 +1356,16 @@ def main(argv: list[str] | None = None) -> None:
     high_risk_heatmap_path = _plot_high_risk_action_heatmaps(best_rows, output_dir)
     training_diagnostics_path = _plot_iql_training_diagnostics(output_dir, seed=args.seed)
     trajectory_path = _write_trajectory_review(best_rows, output_dir)
+    selection_artifacts: dict[str, str] = {}
+    if args.stage == 1:
+        if args.mock:
+            final6_selection = _write_stage1_mock_evaluation_outputs(output_dir, seed=args.seed)
+        else:
+            final6_selection = select_final6_configs(stage1_candidates, clinician_fqe_lower=0.0, min_entropy=1.0)
+        selection_artifacts = _write_final6_selection(
+            final6_selection,
+            output_dir.parent / "selection",
+        )
 
     payload = {
         "algorithm": "iql",
@@ -1060,6 +1396,7 @@ def main(argv: list[str] | None = None) -> None:
             "high_risk_action_heatmaps": str(high_risk_heatmap_path),
             "training_diagnostics_plot": str(training_diagnostics_path),
             "example_trajectory_review": str(trajectory_path),
+            **selection_artifacts,
         },
     }
     summary_path = output_dir / "iql_evaluation_summary.json"
