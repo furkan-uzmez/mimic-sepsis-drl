@@ -1,236 +1,179 @@
-# Snakefile — MIMIC Sepsis Offline RL: Full Pipeline (Raw → Report)
-#
-# Usage:
-#   snakemake -j1 all              # run everything sequentially
-#   snakemake -j4 all              # run with 4 parallel jobs (safe: GPU training runs sequentially)
-#   snakemake -j1 --dry-run        # see what would run
-#   snakemake -j1 report           # only figures & tables
-#   snakemake -j1 stage1_sweep     # only Stage 1 training + eval
-#
-# Server setup (one-time):
-#   pip install snakemake
-#   # Or: uv pip install snakemake
+# IQL final sweep workflow (data checks -> grid -> Stage 1 -> Stage 2 -> report).
+# Mock validation:
+#   uv run snakemake -n --cores 1
+#   uv run snakemake --cores 1 --config mock=true
 
-# ---------------------------------------------------------------------------
-# Paths
-# ---------------------------------------------------------------------------
+MOCK = bool(config.get("mock", False))
 
-MIMIC_RAW  = "data/raw/physionet.org/files/mimiciv/3.1"
-COHORT     = "data/processed/cohort/cohort.parquet"
-ONSET      = "data/processed/onset/onset_assignments.parquet"
-EPISODES   = "data/processed/episodes/episodes.parquet"
-STEPS      = "data/processed/episodes/episode_steps.parquet"
-SPLIT_DIR  = "data/splits"
-SPLIT_CFG  = "configs/splits/default.yaml"
-ONSET_CFG  = "configs/onset/default.yaml"
+SPLITS = ["train", "validation", "test"]
+RESULT_ROOT = "results/iql_final"
 
-SHAPED_REPLAY  = "data/replay/replay_train.parquet"
-SPARSE_REPLAY  = "data/replay_sparse/replay_train.parquet"
+COHORT = "data/processed/cohort/cohort.parquet"
+ONSET = "data/processed/onset/onset_assignments.parquet"
+EPISODES = "data/processed/episodes/episodes.parquet"
+STEPS = "data/processed/episodes/episode_steps.parquet"
+SPLIT_MANIFESTS = expand("data/splits/{split}_manifest.parquet", split=SPLITS)
+SPLIT_SUMMARY = "data/splits/split_summary.json"
+SOFA_REPLAY = expand("data/replay/replay_{split}.parquet", split=SPLITS)
+SOFA_REPLAY_META = expand("data/replay/replay_{split}_meta.json", split=SPLITS)
+SPARSE_REPLAY = expand("data/replay_sparse/replay_{split}.parquet", split=SPLITS)
+SPARSE_REPLAY_META = expand("data/replay_sparse/replay_{split}_meta.json", split=SPLITS)
+ACTION_BINS = "data/processed/actions/action_bins.json"
+PREPROCESSING = "data/processed/features/state_vectors/preprocessing_artifacts.json"
 
-STAGE1_MANIFEST  = "runs/cql_sweep/stage1_manifest.json"
-STAGE1_EVAL      = "runs/cql_sweep/stage1_evaluation.json"
-STAGE2_MANIFEST  = "runs/cql_sweep/stage2_manifest.json"
-EVAL_SUMMARY     = "runs/cql_sweep/evaluation_summary.json"
+PRESWEEP_AUDIT = f"{RESULT_ROOT}/audit/presweep_audit.json"
+GRID_MANIFEST = f"{RESULT_ROOT}/grid/iql_grid_manifest.json"
+STAGE1_MANIFEST = f"{RESULT_ROOT}/stage1/stage1_manifest.json"
+VALIDATION_METRICS = f"{RESULT_ROOT}/stage1/validation_metrics.csv"
+TOP5_CONFIGS = f"{RESULT_ROOT}/stage1/selection/top5_configs.csv"
+FINAL6_CONFIGS = f"{RESULT_ROOT}/stage1/selection/final6_configs.json"
+STAGE2_MANIFEST = f"{RESULT_ROOT}/stage2/finalists_manifest.json"
+STAGE2_SUMMARY = f"{RESULT_ROOT}/stage2/stage2_summary.json"
+STAGE2_SEED_SUMMARY = f"{RESULT_ROOT}/stage2/seed_summary.csv"
+FINAL_REPORT = f"{RESULT_ROOT}/final_report.md"
+FINAL_METRICS = f"{RESULT_ROOT}/final_metrics.json"
+FINAL_COMPARISON = f"{RESULT_ROOT}/final_comparison.csv"
+FINAL_FIGURES = [
+    f"{RESULT_ROOT}/figures/fqe_vs_support.png",
+    f"{RESULT_ROOT}/figures/seed_variance.png",
+    f"{RESULT_ROOT}/figures/action_heatmap.png",
+    f"{RESULT_ROOT}/figures/baseline_comparison.png",
+    f"{RESULT_ROOT}/figures/bootstrap_ci.png",
+]
 
-# ---------------------------------------------------------------------------
-# Rule: all — every output
-# ---------------------------------------------------------------------------
 
 rule all:
     input:
-        EVAL_SUMMARY,
-        expand("docs/assets/report/fig{n}.png", n=range(1, 9)),
-        expand("docs/assets/report/table{n}.csv", n=range(1, 6)),
+        FINAL_REPORT,
+        FINAL_METRICS,
+        FINAL_COMPARISON,
+        STAGE2_SUMMARY,
+        STAGE2_SEED_SUMMARY,
+        FINAL_FIGURES,
+        TOP5_CONFIGS,
+        STAGE2_MANIFEST,
+        PRESWEEP_AUDIT,
 
-# ---------------------------------------------------------------------------
-# Phase 1: Cohort extraction
-# ---------------------------------------------------------------------------
 
-rule cohort:
-    """Extract Sepsis-3 cohort from MIMIC-IV raw tables."""
-    input:
-        raw = MIMIC_RAW,
+rule mock_pipeline_inputs:
     output:
-        COHORT,
+        SOFA_REPLAY,
+        SOFA_REPLAY_META,
+        SPARSE_REPLAY,
+        SPARSE_REPLAY_META,
+        SPLIT_MANIFESTS,
+        SPLIT_SUMMARY,
+        ACTION_BINS,
+        PREPROCESSING,
     shell:
-        "python -m mimic_sepsis_rl.cli.build_cohort"
+        "uv run python scripts/mock_iql_workflow.py inputs"
 
-# ---------------------------------------------------------------------------
-# Phase 2: Onset assignment
-# ---------------------------------------------------------------------------
 
-rule onset:
-    """Assign Sepsis-3 onset times to cohort episodes."""
+rule sofa_replay:
     input:
-        cohort = COHORT,
-        config = ONSET_CFG,
-        raw    = MIMIC_RAW,
+        cohort=COHORT,
+        onset=ONSET,
+        episodes=EPISODES,
+        steps=STEPS,
+        splits=SPLIT_MANIFESTS,
     output:
-        ONSET,
+        SOFA_REPLAY,
+        SOFA_REPLAY_META,
     shell:
-        "python -m mimic_sepsis_rl.data.onset"
+        "uv run python -m mimic_sepsis_rl.cli.build_transitions --reward-variant sofa_shaped"
 
-# ---------------------------------------------------------------------------
-# Phase 3: Episode grid construction
-# ---------------------------------------------------------------------------
-
-rule episodes:
-    """Build 4-hour episode grids from onset assignments."""
-    input:
-        onset = ONSET,
-        raw   = MIMIC_RAW,
-    output:
-        EPISODES,
-        STEPS,
-    shell:
-        "python -m mimic_sepsis_rl.cli.build_episode_grid"
-
-# ---------------------------------------------------------------------------
-# Phase 4: Patient-level splits
-# ---------------------------------------------------------------------------
-
-rule splits:
-    """Generate train/validation/test split manifests."""
-    input:
-        episodes = EPISODES,
-        config   = SPLIT_CFG,
-    output:
-        f"{SPLIT_DIR}/train_manifest.parquet",
-        f"{SPLIT_DIR}/validation_manifest.parquet",
-        f"{SPLIT_DIR}/test_manifest.parquet",
-    shell:
-        "python -m mimic_sepsis_rl.data.splits "
-        "--config {input.config} "
-        "--source-episode-set {input.episodes} "
-
-# ---------------------------------------------------------------------------
-# Phase 5-6: Shaped replay buffer
-# ---------------------------------------------------------------------------
-
-rule shaped_replay:
-    """Build shaped-reward replay buffers (train/val/test)."""
-    input:
-        cohort  = COHORT,
-        onset   = ONSET,
-        episodes = EPISODES,
-        steps    = STEPS,
-        splits   = f"{SPLIT_DIR}/train_manifest.parquet",
-        raw      = MIMIC_RAW,
-    output:
-        SHAPED_REPLAY,
-    shell:
-        "python -m mimic_sepsis_rl.cli.build_transitions "
-        "--reward-variant sofa_shaped "
-
-# ---------------------------------------------------------------------------
-# Phase 5-6: Sparse replay buffer
-# ---------------------------------------------------------------------------
 
 rule sparse_replay:
-    """Build sparse-reward replay buffers (train/val/test)."""
     input:
-        cohort  = COHORT,
-        onset   = ONSET,
-        episodes = EPISODES,
-        steps    = STEPS,
-        splits   = f"{SPLIT_DIR}/train_manifest.parquet",
-        raw      = MIMIC_RAW,
+        cohort=COHORT,
+        onset=ONSET,
+        episodes=EPISODES,
+        steps=STEPS,
+        splits=SPLIT_MANIFESTS,
     output:
         SPARSE_REPLAY,
+        SPARSE_REPLAY_META,
     shell:
-        "python -m mimic_sepsis_rl.cli.build_transitions "
-        "--reward-variant sparse "
-        "--output-dir data/replay_sparse/ "
+        "uv run python -m mimic_sepsis_rl.cli.build_transitions --reward-variant sparse --output-dir data/replay_sparse/"
 
-# ---------------------------------------------------------------------------
-# Phase 10: Stage 1 — Broad CQL sweep (24 runs, ~3h)
-# ---------------------------------------------------------------------------
 
-rule stage1_sweep:
-    """Train 24 CQL configurations with seed=42 (broad screen)."""
+rule presweep_audit:
     input:
-        shaped = SHAPED_REPLAY,
-        sparse = SPARSE_REPLAY,
+        sofa=SOFA_REPLAY,
+        sofa_meta=SOFA_REPLAY_META,
+        sparse=SPARSE_REPLAY,
+        sparse_meta=SPARSE_REPLAY_META,
+        splits=SPLIT_MANIFESTS,
+        split_summary=SPLIT_SUMMARY,
+        action_bins=ACTION_BINS,
+        preprocessing=PREPROCESSING,
     output:
-        STAGE1_MANIFEST,
+        PRESWEEP_AUDIT,
     shell:
-        "python scripts/run_cql_sweep.py --stage 1"
+        "uv run python scripts/mock_iql_workflow.py audit --output {output}"
+        if MOCK else
+        "uv run python scripts/audit_iql_presweep.py --output {output}"
 
-# ---------------------------------------------------------------------------
-# Phase 10: Stage 1 evaluation — rank by validation FQE
-# ---------------------------------------------------------------------------
 
-rule stage1_eval:
-    """Evaluate Stage 1 checkpoints on validation split, rank by FQE."""
+rule iql_grid_manifest:
     input:
-        manifest = STAGE1_MANIFEST,
+        audit=PRESWEEP_AUDIT,
     output:
-        STAGE1_EVAL,
+        GRID_MANIFEST,
     shell:
-        "python scripts/evaluate_cql_sweep.py --stage 1"
+        "uv run python scripts/run_iql_sweep.py --stage 1 --output-root {RESULT_ROOT} --mock --dry-run"
+        if MOCK else
+        "uv run python scripts/run_iql_sweep.py --stage 1 --output-root {RESULT_ROOT} --dry-run"
 
-# ---------------------------------------------------------------------------
-# Phase 10: Stage 2 — Multi-seed confirmation (24 runs, ~3h)
-# ---------------------------------------------------------------------------
 
-rule stage2_sweep:
-    """Train top-6 configs with 4 extra seeds each."""
+rule iql_stage1_sweep:
     input:
-        eval_json = STAGE1_EVAL,
-        shaped    = SHAPED_REPLAY,
-        sparse    = SPARSE_REPLAY,
+        grid=GRID_MANIFEST,
+        audit=PRESWEEP_AUDIT,
     output:
-        STAGE2_MANIFEST,
+        manifest=STAGE1_MANIFEST,
+        top5=TOP5_CONFIGS,
+        final6=FINAL6_CONFIGS,
     shell:
-        "python scripts/run_cql_sweep.py "
-        "--stage 2 "
-        "--stage1-eval {input.eval_json} "
+        "uv run python scripts/run_iql_sweep.py --stage 1 --output-root {RESULT_ROOT} --mock --dry-run"
+        if MOCK else
+        "uv run python scripts/run_iql_sweep.py --stage 1 --output-root {RESULT_ROOT}"
 
-# ---------------------------------------------------------------------------
-# Phase 10: Final evaluation — test split + bootstrap CIs
-# ---------------------------------------------------------------------------
 
-rule final_eval:
-    """Evaluate all checkpoints on test split with bootstrap CIs."""
+rule iql_stage1_validation:
     input:
-        manifest = STAGE2_MANIFEST,
+        manifest=STAGE1_MANIFEST,
+        final6=FINAL6_CONFIGS,
     output:
-        EVAL_SUMMARY,
+        VALIDATION_METRICS,
     shell:
-        "python scripts/evaluate_cql_sweep.py --stage final"
+        "uv run python scripts/mock_iql_workflow.py validation --output {output}"
+        if MOCK else
+        "uv run python scripts/evaluate_iql_sweep.py --checkpoint-dir checkpoints/iql_final --output-dir {RESULT_ROOT}/stage1/evaluation"
 
-# ---------------------------------------------------------------------------
-# Phase 10: Report — figures + tables
-# ---------------------------------------------------------------------------
 
-rule report:
-    """Generate 8 figures, 5 tables, and draft report."""
+rule iql_stage2_sweep:
     input:
-        eval_summary = EVAL_SUMMARY,
+        validation=VALIDATION_METRICS,
+        final6=FINAL6_CONFIGS,
     output:
-        expand("docs/assets/report/fig{n}.png", n=range(1, 9)),
-        expand("docs/assets/report/table{n}.csv", n=range(1, 6)),
+        manifest=STAGE2_MANIFEST,
     shell:
-        "python scripts/generate_report_figures.py"
+        "uv run python scripts/run_iql_sweep.py --stage 2 --output-root {RESULT_ROOT} --mock --dry-run"
+        if MOCK else
+        "uv run python scripts/run_iql_sweep.py --stage 2 --output-root {RESULT_ROOT}"
 
 
-# ---------------------------------------------------------------------------
-# Clean targets
-# ---------------------------------------------------------------------------
-
-rule clean_sweep:
-    """Remove sweep outputs (checkpoints + runs) to free disk space."""
+rule iql_stage2_summary:
+    input:
+        manifest=STAGE2_MANIFEST,
+        stage1=STAGE1_MANIFEST,
+    output:
+        summary=STAGE2_SUMMARY,
+        seed_summary=STAGE2_SEED_SUMMARY,
+        metrics=FINAL_METRICS,
+        comparison=FINAL_COMPARISON,
+        report=FINAL_REPORT,
+        figures=FINAL_FIGURES,
     shell:
-        "rm -rf checkpoints/cql_sweep/ runs/cql_sweep/"
-
-rule clean_replay:
-    """Remove replay buffers."""
-    shell:
-        "rm -rf data/replay/ data/replay_sparse/"
-
-rule clean_all:
-    """Remove ALL generated data including processed artifacts."""
-    shell:
-        "rm -rf data/processed/ data/replay/ data/replay_sparse/ "
-        "data/splits/ checkpoints/cql_sweep/ runs/cql_sweep/ "
-        "docs/assets/report/"
+        "uv run python scripts/build_iql_final_bundle.py --output-root {RESULT_ROOT} --stage2-manifest {input.manifest}"
