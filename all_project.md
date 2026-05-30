@@ -47,9 +47,10 @@ Proje, katı bir bağımlılık zinciri içinde 10 ana faza (Phase) bölünmüş
 *   Tüm veriler, RL modellerinin yutabileceği `(s_t, a_t, r_t, s_t+1, done)` formatında Parquet dosyalarına dönüştürülmüştür.
 *   Karşılaştırma için; gerçek klinisyen davranışı, "hiç tedavi vermeme (no-treatment)" ve "sadece doktoru taklit etme (Behavior Cloning)" baselineları oluşturulmuştur.
 
-### Adım 7 & 8: Modellerin (CQL, BCQ, IQL) Eğitimi
-*   Offline RL modelleri veri dışında yeni bir şey denemezler (Extrapolation error riskine karşı korunurlar).
-*   Projede **CQL (Conservative Q-Learning)**, **BCQ (Batch-Constrained Q-Learning)** ve **IQL (Implicit Q-Learning)** algoritmaları ortak bir runtime üzerinde entegre edilmiştir. Modeller hem MPS (Mac) hem de CUDA (GPU) üzerinde sorunsuz eğitilmiştir.
+### Adım 7 & 8: IQL (Implicit Q-Learning) Modelinin Eğitimi
+*   Offline RL modelleri, ellerindeki veri kümesi dışında yeni eylemler denemezler (Böylece gerçek hayatta hiç görmedikleri dozları deneyip "Extrapolation error" yaratma riskine karşı korunurlar).
+*   Projede özellikle **IQL (Implicit Q-Learning)** algoritmasına odaklanılmıştır. IQL'in temel mantığı, veride olmayan aksiyonları (örneğin aşırı yüksek bir doz) hayal edip değer biçmek yerine, doğrudan eldeki doktor davranışları içindeki en faydalı (avantajlı) kararları öğrenmesidir.
+*   Model altyapısı cihaz-bağımsız (device-agnostic) tasarlanmıştır; yani eğitim kodları değiştirilmeden hem Apple Silicon (MPS / Mac) hem de NVIDIA (CUDA / GPU) üzerinde sorunsuz şekilde çalışabilmektedir.
 
 ### Adım 9: Değerlendirme, Güvenlik ve Raporlama
 *   Modellerin doğruluğu **Offline Policy Evaluation (OPE)** metrikleriyle (FQE, WIS, ESS) değerlendirilmiştir.
