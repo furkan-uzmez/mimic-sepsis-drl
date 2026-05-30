@@ -33,11 +33,13 @@ Proje, katı bir bağımlılık zinciri içinde 10 ana faza (Phase) bölünmüş
 
 ### Adım 4: Durum (State) Vektörü Çıkarımı
 *   Her 4 saatlik adım için hastanın o anki durumunu özetleyen **62 boyutlu sürekli (continuous) bir durum vektörü** oluşturulmuştur.
+*   **Agregasyon (Özetleme):** 4 saatlik süre boyunca ölçülen onlarca veri (örn. tansiyon); klinik anlama göre *son ölçüm (last), ortalama (mean), minimum (min), maksimum (max)* veya *toplam (sum)* kurallarıyla tek bir sayıya indirgenmiştir.
 *   **Özellikler:** Kalp hızı, tansiyon (MAP vb.) gibi vital bulgular; kan gazı, laktat gibi laboratuvar değerleri; demografik bilgiler ve kümülatif tedavi geçmişi.
 *   **Eksik Veri (Missingness):** Eksik veriler önce hasta bazında ileri doğru (forward-fill) doldurulmuş, yetmezse *sadece Train setinden* elde edilen medyan değerler (fallback) kullanılmıştır.
 
 ### Adım 5: Aksiyon (Action) ve Ödül (Reward) Mühendisliği
-*   **Aksiyonlar:** Vazopressör dozu ve İntravenöz (IV) sıvı hacmi, yine sadece Train setindeki çeyreklik dilimlere (quartiles) göre **5x5'lik bir matrise** oturtulmuştur. Model toplamda **25 farklı ayrık aksiyondan** (0: tedavi yok ... 24: maksimum doz) birini seçmektedir.
+*   **Aksiyonlar:** Vazopressör dozu ve İntravenöz (IV) sıvı hacmi **5x5'lik bir matrise** oturtulmuştur. Model toplamda **25 farklı ayrık aksiyondan** (0: tedavi yok ... 24: maksimum doz) birini seçmektedir.
+    *   **Sıfır Doz Hassasiyeti:** "Hiç ilaç/sıvı vermeme" durumu (Doz 0), düşük dozlarla karıştırılmaması için kasıtlı olarak kendine ait bir sınıfa (Bin 0) konulmuştur. Geri kalan dozlar ise yine sadece Train setinde hesaplanan çeyreklik dilimler (Q25, Q50, Q75) ile 4 eşit sınıfa ayrılmıştır.
 *   **Ödüller:** Modeller iki farklı ödül fonksiyonu ile eğitilmektedir:
     *   *Sparse:* Yalnızca hasta taburcu olduğunda yaşadıysa +15, öldüyse -15 (terminal utility).
     *   *SOFA-Shaped:* Terminal ödüle ek olarak, organ yetmezlik skoru (SOFA) arttıkça negatif, düştükçe pozitif ara ödüller (shaping) eklenen versiyon.
@@ -58,7 +60,7 @@ Proje, katı bir bağımlılık zinciri içinde 10 ana faza (Phase) bölünmüş
 
 ### Adım 10: Nihai Çoklu-Tohum (Multi-Seed) Tarama ve IEEE Raporu (Final Sweep)
 *   **IQL Protokolü:** 2 ödül varyantı × 3 Learning Rate rejimi × 3 IQL hiperparametresi olmak üzere toplam **18 farklı eğitim ayarı** test edilmiştir.
-*   **Finalist Seçimi:** Modeller seçilirken test setine **asla bakılmamış**, seçimler Validation setinde FQE, ESS (Efektif Örneklem Boyutu), güvenlik (safety) ve doktora uyum (clinician agreement) skorlarına göre "cok kriterli bir puanlama" ile yapılıp 6 finalist seçilmiştir.
+*   **Finalist Seçimi (Güvenlik Odaklı):** Modeller seçilirken test setine **asla bakılmamış**, seçimler Validation setinde "çok kriterli bir puanlama" ile yapılıp 6 finalist seçilmiştir. Bu seçimde sırf skoru yüksek diye güvensiz modellere izin verilmemiştir; *en dengeli, doktora en çok uyan (clinician agreement) ve en iyi desteklenen (support)* modeller listeye dâhil edilerek çeşitlilik korunmuştur.
 *   **IEEE Raporunun (iql_final_ieee_report.pdf) Çıktısı:** Rapor, sızıntı denetimlerinin %100 başarıyla geçildiğini, model seçiminin çeşitlilik korunarak yapıldığını kanıtlamaktadır. Ancak raporda metodolojik dürüstlük gereği, IQL için nihai politikanın test setindeki FQE ve WIS metriklerinin entegrasyon eksiği nedeniyle *henüz sayısal olarak hesaplanamadığı (H.D. - Hesaplanamayan Değer)* açıkça beyan edilmiştir. 
 
 ---
