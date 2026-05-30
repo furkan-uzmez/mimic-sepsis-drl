@@ -7,14 +7,14 @@
 \citation{gottesman2019guidelines}
 \citation{mimiciv}
 \citation{evans2021ssc}
+\citation{cql}
+\citation{iql}
 \babel@aux{turkish}{}
 \@writefile{toc}{\contentsline {section}{\numberline {I}Giriş}{1}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {II}İlgili Çalışmalar}{1}{}\protected@file@percent }
-\citation{cql}
-\citation{iql}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Kuramsal Arka Plan ve Algoritmik Konumlandırma}{1}{}\protected@file@percent }
 \citation{singer2016sepsis3,mimiciv}
 \citation{komorowski2018ai,raghu2017sepsis}
-\@writefile{toc}{\contentsline {section}{\numberline {III}Kuramsal Arka Plan ve Algoritmik Konumlandırma}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {IV}Uçtan Uca Proje Mimarisi}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {V}Kohort, Zaman ve Split Tasarımı}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Kohort Seçimi}{2}{}\protected@file@percent }
@@ -23,23 +23,25 @@
 \@writefile{toc}{\contentsline {section}{\numberline {VI}MDP Formülasyonu}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}State Temsili}{2}{}\protected@file@percent }
 \citation{singer2016sepsis3}
+\citation{gottesman2019guidelines}
 \@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Projenin on aşamalı uçtan uca mimarisi.}}{3}{}\protected@file@percent }
 \newlabel{tab:ten_steps}{{I}{3}{}{table.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Action Uzayı}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Reward Tasarımı}{3}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Vazopresör ve IV sıvı aksiyon grid'i.}}{3}{}\protected@file@percent }
 \newlabel{tab:action_grid}{{II}{3}{}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Action Uzayı}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Reward Tasarımı}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Discount Factor}{3}{}\protected@file@percent }
-\citation{gottesman2019guidelines}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Preprocessing ve Leakage-Free Sözleşmeler}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}Aşama 0 Ön Tarama Denetimi}{3}{}\protected@file@percent }
 \citation{iql}
 \citation{cql,iql}
 \@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Presweep denetim özeti.}}{4}{}\protected@file@percent }
 \newlabel{tab:audit}{{III}{4}{}{table.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Preprocessing ve Leakage-Free Sözleşmeler}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}Aşama 0 Ön Tarama Denetimi}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {VIII}Baseline Politikaları}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {IX}IQL Algoritması}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {X}IQL Final Tarama Tasarımı}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {XI}Seed Stratejisi ve Karar Kuralı}{4}{}\protected@file@percent }
+\citation{gottesman2019guidelines}
 \citation{gottesman2019guidelines}
 \@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Final IQL hiperparametre grid'i.}}{5}{}\protected@file@percent }
 \newlabel{tab:grid_full}{{IV}{5}{}{table.4}{}}
@@ -47,28 +49,28 @@
 \newlabel{tab:fixed_params}{{V}{5}{}{table.5}{}}
 \@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Final IQL Tarama ve Raporlama İş Akışı}}{5}{}\protected@file@percent }
 \newlabel{alg:workflow}{{1}{5}{}{algorithm.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {XI}Seed Stratejisi ve Karar Kuralı}{5}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {XII}Aşama 1 Finalist Seçim Sonuçları}{5}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Validasyon value tahmini ile davranış desteği diagnostiklerinin birlikte gösterimi. Yüksek value yalnız yeterli destekle birlikte anlamlı kabul edilmelidir.}}{5}{}\protected@file@percent }
+\newlabel{fig:fqe_support}{{1}{5}{}{figure.1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {XIII}Aşama 2 ve Baseline Değerlendirmesi}{5}{}\protected@file@percent }
-\citation{gottesman2019guidelines}
 \@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Aşama 1 final-altı seçim özeti.}}{6}{}\protected@file@percent }
 \newlabel{tab:finalists}{{VI}{6}{}{table.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Validasyon value tahmini ile davranış desteği diagnostiklerinin birlikte gösterimi. Yüksek value yalnız yeterli destekle birlikte anlamlı kabul edilmelidir.}}{6}{}\protected@file@percent }
-\newlabel{fig:fqe_support}{{1}{6}{}{figure.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {XIV}Aksiyon ve Güvenlik Diagnostikleri}{6}{}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Final seçili IQL politikası ve referans baseline gösterimi. Seçili IQL değeri gerçek Aşama 2 değerlendirmesinden, referans baseline çubukları ise rapor artifactinde kullanılan karşılaştırma gösteriminden gelir.}}{6}{}\protected@file@percent }
 \newlabel{fig:baseline_comparison}{{2}{6}{}{figure.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Aşama 2 finalistleri için tekrarlı-tohum FQE değişkenliği. Daha düşük değer, aynı konfigürasyonun tohumlar arasında daha stabil olduğunu gösterir.}}{6}{}\protected@file@percent }
 \newlabel{fig:seed_variance}{{3}{6}{}{figure.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XIV}Aksiyon ve Güvenlik Diagnostikleri}{6}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Final politika analizi için üretilmiş aksiyon dağılımı heatmap'i. Tedavi gridi vazopresör ve sıvı şiddetinin ayrık kombinasyonlarını temsil eder.}}{6}{}\protected@file@percent }
+\newlabel{fig:action_heatmap}{{4}{6}{}{figure.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Final seçili IQL politikasının üç tohum için hasta-düzeyi bootstrap WIS güven aralıkları. Güven aralıkları 50 bootstrap resample ile hesaplanmıştır ve düşük ESS nedeniyle temkinli yorumlanmalıdır.}}{6}{}\protected@file@percent }
+\newlabel{fig:bootstrap_ci}{{5}{6}{}{figure.5}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {VII}{\ignorespaces Aşama 2 üç-tohum finalist değerlendirmesi. Skor, FQE/WIS/ESS/destek/uyum ve low-support bileşik seçim skorudur.}}{7}{}\protected@file@percent }
 \newlabel{tab:stage2}{{VII}{7}{}{table.7}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {VIII}{\ignorespaces Kazanan konfigürasyonun test diagnostikleri. WIS güven aralığı 50 hasta-düzeyi bootstrap resample ile hesaplanmıştır.}}{7}{}\protected@file@percent }
 \newlabel{tab:baseline}{{VIII}{7}{}{table.8}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Final politika analizi için üretilmiş aksiyon dağılımı heatmap'i. Tedavi gridi vazopresör ve sıvı şiddetinin ayrık kombinasyonlarını temsil eder.}}{7}{}\protected@file@percent }
-\newlabel{fig:action_heatmap}{{4}{7}{}{figure.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Final seçili IQL politikasının üç tohum için hasta-düzeyi bootstrap WIS güven aralıkları. Güven aralıkları 50 bootstrap resample ile hesaplanmıştır ve düşük ESS nedeniyle temkinli yorumlanmalıdır.}}{7}{}\protected@file@percent }
-\newlabel{fig:bootstrap_ci}{{5}{7}{}{figure.5}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {XV}Yeniden Üretilebilirlik ve Teknoloji Yığını}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {XVI}Sınırlar ve Etik Değerlendirme}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {XVII}Gelecek Araştırma Yönleri}{7}{}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{references}
 \bibcite{iql}{1}
@@ -79,8 +81,6 @@
 \bibcite{mimiciv}{6}
 \bibcite{evans2021ssc}{7}
 \bibcite{singer2016sepsis3}{8}
-\@writefile{toc}{\contentsline {section}{\numberline {XVI}Sınırlar ve Etik Değerlendirme}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {XVII}Gelecek Araştırma Yönleri}{8}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {XVIII}Sonuç}{8}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{Kaynaklar}{8}{}\protected@file@percent }
 \gdef \@abspage@last{8}
