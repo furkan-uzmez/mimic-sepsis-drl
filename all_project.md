@@ -16,12 +16,15 @@ Bu projenin amacı, doktorların canlı hastalar üzerinde deneme yapmasının (
 Proje, katı bir bağımlılık zinciri içinde 10 ana faza (Phase) bölünmüş ve tamamlanmıştır:
 
 ### Adım 1: Kohort (Hasta Grubu) Tanımı ve Seçimi
-*   MIMIC-IV veritabanından **Sepsis-3** kriterlerine uyan yetişkin ICU hastaları filtrelenmiştir.
-*   Hastaların dâhil edilme ve edilmeme (inclusion/exclusion) kuralları şeffaf bir şekilde kodlanmış ve dışlanan hastalar için `audit.json` raporları üretilmiştir.
+*   MIMIC-IV veritabanından **Sepsis-3** kriterlerine uyan hastalar çekilmiştir. Dâhil edilme (inclusion) ve dışlanma (exclusion) kuralları, hem tıbbi geçerliliği sağlamak hem de yapay zekanın kopya çekmesini (data leakage) engellemek için şeffafça kodlanmıştır:
+    *   **Dâhil Edilenler (Inclusion):** Sadece 18 yaş ve üzeri yetişkinler (çocukların ilaç dozajları farklı olduğu için modelin kafası karışmasın diye), kesintisiz 4 saatlik yoğun veri takibi yapılabilmesi için sadece doğrudan Yoğun Bakım (ICU) hastaları ve medikal olarak "Sepsis-3" tanısı konmuş hastalar seçilmiştir.
+    *   **Dışlananlar (Exclusion):** Sepsise yakalandığı kesin saat (onset time) veri tabanında bulunamayanlar, 4 saatten kısa süre yoğun bakımda kalıp modelin öğrenebileceği bir süreç sunmayanlar ve yaşı/cinsiyeti kaydedilmemiş hastalar veriden atılmıştır. **En kritik dışlanma kuralı ise "Tekrar Yatan Hastalar (Readmissions)"dır;** eğer hasta aylar sonra tekrar yoğun bakıma yattıysa sadece ilk yatışı alınmış, ikincisi silinmiştir. Çünkü aynı hastanın bir yatışı Eğitim (Train) setine diğer yatışı Test setine düşerse model hastanın anatomisini ezberleyerek hile yapabilir.
+*   Bu filtrelere takılıp dışlanan hastalar için arkada sayılarla belgelenmiş şeffaf bir `audit.json` raporu üretilmiştir.
 
 ### Adım 2: Zaman Çizelgesi ve Sepsis Başlangıç (Onset) Tespiti
 *   Her bir ICU kalışı için kesin bir `sepsis_onset_time` (sepsis başlangıç zamanı) hesaplanmıştır.
-*   Hastanın süreci, sepsis başlangıcından **24 saat öncesi ile 48 saat sonrası** arasında sınırlandırılmış ve **4'er saatlik karar adımlarına (timestep)** bölünerek bir Markov Karar Sürecine (MDP) dönüştürülmüştür. Ortalama bir hasta 18 karar adımından oluşmaktadır.
+*   Hastanın yoğun bakımdaki süreci, sepsis teşhisinden **24 saat öncesi ile 48 saat sonrası** arasındaki 72 saatlik bir pencereye hapsedilmiş ve **4'er saatlik karar adımlarına (timestep)** bölünerek bir Markov Karar Sürecine (MDP) dönüştürülmüştür. 
+*   **"Ortalama bir hasta 18 karar adımından oluşmaktadır"** ifadesi buradan gelir: 72 saatlik toplam gözlem süresi 4 saatlik pencerelere bölündüğünde (72 / 4) toplam 18 adet zaman/karar adımı (timestep) elde edilir. Her adımda hastanın o anki verileri ölçülür ve model bir sonraki adım için sıvı/ilaç dozunu seçer.
 
 ### Adım 3: Veri Sızıntısı Koruması (Zero-Leakage Boundaries)
 *   Hastalar rastgele `Train (%70)`, `Validation (%15)` ve `Test (%15)` setlerine ayrılmıştır.
