@@ -351,16 +351,16 @@ Ortalama & 2.848 & 8.203 & 29.41 & 0.414 \\
 
 \begin{table}[t]
 \centering
-\caption{Referans politika teşhisleri. FQE/WIS karşılaştırması Tablo~\ref{tab:baseline}'de yalnız seçili IQL için verilir; burada referans politikaların destek ve klinisyen uyumu bağlamı gösterilir.}
+\caption{Referans politika WIS teşhisleri. FQE yalnız öğrenilmiş IQL kontrol noktası için raporlanır; referans politikalar için WIS/ESS ve klinisyen uyumu aynı test tekrar oynatma üzerinde hesaplanmıştır.}
 \label{tab:reference_policies}
-\begin{tabular}{lrr}
+\begin{tabular}{lrrr}
 \toprule
-Politika & ESS & Uyum \\
+Politika & WIS & ESS & Uyum \\
 \midrule
-Klinisyen tekrar oynatımı & 100.0 & 1.000 \\
-Tedavisiz & 100.0 & 0.120 \\
-Davranış klonlama & 92.0 & 0.580 \\
-Seçili IQL & 29.4 & 0.414 \\
+Klinisyen tekrar oynatımı & 8.774 & 2585.0 & 1.000 \\
+Tedavisiz & 7.464 & 34.2 & 0.354 \\
+Davranış klonlama & 9.194 & 1.6 & 0.405 \\
+Seçili IQL & 8.203 & 29.4 & 0.414 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -388,7 +388,7 @@ Desteklenmeyen aksiyon sapması & 0.009 \\
 \begin{figure}[t]
  \centering
  \includegraphics[width=.98\columnwidth]{figures/baseline_comparison.png}
- \caption{Final seçili IQL politikası ve referans politika gösterimi. FQE ve WIS yalnız seçili IQL için gerçek Aşama 2 OPE çıktısıdır; klinisyen tekrar oynatımı, tedavisiz politika ve davranış klonlama çubukları bağlamsal referans olarak verilmiştir.}
+ \caption{Final seçili IQL politikası ve referans politikalar için WIS ve ESS teşhisleri. Davranış klonlama WIS değeri yüksek görünse de ESS=1.6 olduğu için güvenilir politika üstünlüğü kanıtı olarak yorumlanmaz.}
  \label{fig:baseline_comparison}
 \end{figure}
 
