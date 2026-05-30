@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IQL Sepsis Offline RL Sunumu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Nunito:wght@500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===========================================
+       VIEWPORT FITTING: MANDATORY BASE STYLES
+       =========================================== */
+    html, body { height: 100%; overflow-x: hidden; }
+    html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+    .slide { width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; scroll-snap-align: start; display: flex; flex-direction: column; position: relative; }
+    .slide-content { flex: 1; display: flex; flex-direction: column; justify-content: center; max-height: 100%; overflow: hidden; padding: var(--slide-padding); }
+    :root {
+      --title-size: clamp(1.5rem, 5vw, 4rem); --h2-size: clamp(1.25rem, 3.5vw, 2.5rem); --h3-size: clamp(1rem, 2.5vw, 1.75rem); --body-size: clamp(0.75rem, 1.5vw, 1.125rem); --small-size: clamp(0.65rem, 1vw, 0.875rem);
+      --slide-padding: clamp(1rem, 4vw, 4rem); --content-gap: clamp(0.5rem, 2vw, 2rem); --element-gap: clamp(0.25rem, 1vw, 1rem);
+    }
+    .card, .container, .content-box { max-width: min(90vw, 1000px); max-height: min(80vh, 700px); }
+    .feature-list, .bullet-list { gap: clamp(0.4rem, 1vh, 1rem); }
+    .feature-list li, .bullet-list li { font-size: var(--body-size); line-height: 1.4; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: clamp(0.5rem, 1.5vw, 1rem); }
+    img, .image-container { max-width: 100%; max-height: min(50vh, 400px); object-fit: contain; }
+    @media (max-height: 700px) { :root { --slide-padding: clamp(0.75rem, 3vw, 2rem); --content-gap: clamp(0.4rem, 1.5vw, 1rem); --title-size: clamp(1.25rem, 4.5vw, 2.5rem); --h2-size: clamp(1rem, 3vw, 1.75rem); } }
+    @media (max-height: 600px) { :root { --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem); --content-gap: clamp(0.3rem, 1vw, 0.75rem); --title-size: clamp(1.1rem, 4vw, 2rem); --body-size: clamp(0.7rem, 1.2vw, 0.95rem); } .nav-dots, .keyboard-hint, .decorative { display: none; } }
+    @media (max-height: 500px) { :root { --slide-padding: clamp(0.4rem, 2vw, 1rem); --title-size: clamp(1rem, 3.5vw, 1.5rem); --h2-size: clamp(0.9rem, 2.5vw, 1.25rem); --body-size: clamp(0.65rem, 1vw, 0.85rem); } }
+    @media (max-width: 600px) { :root { --title-size: clamp(1.25rem, 7vw, 2.5rem); } .grid { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; } html { scroll-behavior: auto; } }
+
+    :root {
+      --ink: #111316; --paper: #f4f0e5; --signal: #e23d28; --mint: #93d9c8; --steel: #62717a; --line: rgba(17,19,22,.22); --shadow: rgba(17,19,22,.18);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: 'Nunito', sans-serif; }
+    body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .28; background-image: radial-gradient(circle at 1px 1px, rgba(17,19,22,.22) 1px, transparent 0); background-size: 18px 18px; z-index: 0; }
+    main { position: relative; z-index: 1; }
+    .slide::before { content: ''; position: absolute; inset: clamp(10px, 2vw, 28px); border: 1px solid var(--line); pointer-events: none; }
+    .slide::after { content: attr(data-kicker); position: absolute; right: var(--slide-padding); top: clamp(16px, 3vh, 42px); font: 700 var(--small-size)/1 'Space Mono', monospace; letter-spacing: .12em; color: var(--signal); text-transform: uppercase; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2 { font-family: 'Archivo', sans-serif; letter-spacing: -.055em; text-transform: uppercase; }
+    h1 { font-size: var(--title-size); line-height: .92; max-width: 12ch; }
+    h2 { font-size: var(--h2-size); line-height: .94; max-width: 13ch; }
+    h3 { font-size: var(--h3-size); line-height: 1; font-weight: 900; }
+    p { font-size: var(--body-size); line-height: 1.45; max-width: 62ch; }
+    .eyebrow { font: 700 var(--small-size)/1.2 'Space Mono', monospace; color: var(--signal); letter-spacing: .16em; text-transform: uppercase; margin-bottom: var(--element-gap); }
+    .lede { font-size: clamp(.9rem, 2vw, 1.35rem); max-width: 58ch; color: #30353a; }
+    .split { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: var(--content-gap); align-items: center; }
+    .panel { background: rgba(255,255,255,.42); border: 1px solid var(--line); box-shadow: 12px 12px 0 var(--ink); padding: clamp(.8rem, 2vw, 1.5rem); }
+    .panel.red { background: var(--signal); color: white; border-color: var(--ink); }
+    .metric { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(.45rem, 1.2vw, 1rem); margin-top: var(--content-gap); }
+    .metric div, .mini-card { border: 1px solid var(--line); background: rgba(255,255,255,.52); padding: clamp(.6rem, 1.4vw, 1rem); }
+    .metric strong { display: block; font: 900 clamp(1.1rem, 3vw, 2.3rem)/1 'Archivo', sans-serif; color: var(--signal); letter-spacing: -.04em; }
+    .metric span, .caption, .tag { font: 700 var(--small-size)/1.25 'Space Mono', monospace; color: var(--steel); text-transform: uppercase; letter-spacing: .08em; }
+    ul { margin: 0; padding: 0; list-style: none; }
+    li { position: relative; padding-left: 1.25em; }
+    li::before { content: '■'; position: absolute; left: 0; color: var(--signal); font-size: .72em; top: .22em; }
+    .rail { display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(.3rem, 1vw, .8rem); align-items: stretch; }
+    .step { min-height: clamp(84px, 16vh, 150px); border: 1px solid var(--line); background: rgba(255,255,255,.35); padding: clamp(.55rem, 1.3vw, 1rem); display: flex; flex-direction: column; justify-content: space-between; }
+    .step b { font: 900 clamp(1rem, 2.5vw, 2rem)/1 'Archivo', sans-serif; color: var(--signal); }
+    .step span { font-size: clamp(.62rem, 1.1vw, .9rem); line-height: 1.2; }
+    .formula { font: 700 clamp(.75rem, 1.5vw, 1.15rem)/1.5 'Space Mono', monospace; background: var(--ink); color: var(--mint); padding: clamp(.7rem, 1.5vw, 1.1rem); border-left: clamp(6px, 1vw, 12px) solid var(--signal); }
+    .action-grid { display: grid; grid-template-columns: repeat(5, minmax(34px, 1fr)); gap: clamp(.25rem, .8vw, .55rem); max-width: min(46vw, 470px); }
+    .cell { aspect-ratio: 1; display: grid; place-items: center; background: rgba(255,255,255,.5); border: 1px solid var(--line); font: 900 clamp(.75rem, 1.6vw, 1.2rem)/1 'Archivo', sans-serif; }
+    .cell:nth-child(6n), .cell:nth-child(4n+3) { background: rgba(226,61,40,.18); }
+    .table { width: 100%; border-collapse: collapse; font-size: clamp(.62rem, 1.18vw, .95rem); }
+    .table th, .table td { border-bottom: 1px solid var(--line); padding: clamp(.28rem, .8vw, .55rem); text-align: left; }
+    .table th { font: 900 var(--small-size)/1 'Archivo', sans-serif; text-transform: uppercase; }
+    .table td:last-child, .table th:last-child { color: var(--signal); font-weight: 900; }
+    .figure { width: 100%; max-height: min(54vh, 520px); object-fit: contain; background: rgba(255,255,255,.65); border: 1px solid var(--line); padding: clamp(.35rem, 1vw, .8rem); }
+    .twofig { display: grid; grid-template-columns: 1fr 1fr; gap: var(--content-gap); align-items: center; }
+    .quote { font: 900 clamp(1.2rem, 3.8vw, 3.6rem)/.95 'Archivo', sans-serif; letter-spacing: -.055em; max-width: 15ch; text-transform: uppercase; }
+    .accent-orb { position: absolute; width: clamp(140px, 22vw, 360px); aspect-ratio: 1; border-radius: 999px; background: radial-gradient(circle, rgba(147,217,200,.75), rgba(226,61,40,.06) 68%, transparent 70%); filter: blur(2px); right: 8vw; bottom: 9vh; z-index: -1; }
+    .big-number { font: 900 clamp(5rem, 18vw, 15rem)/.8 'Archivo', sans-serif; color: rgba(226,61,40,.16); position: absolute; right: var(--slide-padding); bottom: var(--slide-padding); letter-spacing: -.08em; }
+    .nav { position: fixed; left: 50%; bottom: clamp(8px, 2vh, 18px); transform: translateX(-50%); z-index: 10; display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: rgba(244,240,229,.82); border: 1px solid var(--line); backdrop-filter: blur(8px); }
+    .dot { width: 8px; height: 8px; border-radius: 99px; background: rgba(17,19,22,.25); border: 0; padding: 0; cursor: pointer; }
+    .dot.active { width: 28px; background: var(--signal); }
+    .counter { position: fixed; right: clamp(12px, 2vw, 28px); bottom: clamp(10px, 2vh, 20px); z-index: 10; font: 700 var(--small-size)/1 'Space Mono', monospace; color: var(--steel); }
+    [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .55s ease, transform .55s ease; }
+    .is-active [data-reveal] { opacity: 1; transform: translateY(0); }
+    .is-active [data-reveal]:nth-child(2) { transition-delay: .08s; } .is-active [data-reveal]:nth-child(3) { transition-delay: .16s; } .is-active [data-reveal]:nth-child(4) { transition-delay: .24s; }
+    @media (max-width: 840px) { .split, .twofig { grid-template-columns: 1fr; } .rail { grid-template-columns: repeat(2, 1fr); } .action-grid { max-width: 100%; } .metric { grid-template-columns: 1fr; } .figure { max-height: 38vh; } }
+    @media (max-height: 600px) { .rail { grid-template-columns: repeat(5, 1fr); } .step { min-height: 64px; } .panel { box-shadow: 7px 7px 0 var(--ink); } .figure { max-height: 38vh; } }
+  </style>
+</head>
+<body>
+<main id="deck">
+  <section class="slide" data-kicker="Offline RL / Sepsis">
+    <div class="accent-orb decorative"></div>
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>MIMIC-IV + IQL</p>
+        <h1 data-reveal>Sepsis Dozaj Politikaları</h1>
+        <p class="lede" data-reveal>Destek sınırlı klinik koşullarda çevrimdışı pekiştirmeli öğrenme iş akışı.</p>
+      </div>
+      <div class="panel red" data-reveal>
+        <h3>Final aday</h3>
+        <p style="margin-top:1rem">iql_sofa_shaped_conservative_safe</p>
+        <div class="metric">
+          <div><strong>2.848</strong><span>FQE</span></div>
+          <div><strong>8.203</strong><span>WIS</span></div>
+          <div><strong>29.41</strong><span>ESS</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Problem">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Neden zor?</p>
+        <h2 data-reveal>Klinik veri destek sınırı taşır</h2>
+      </div>
+      <ul class="bullet-list panel" data-reveal>
+        <li>Sepsis kararları gecikmeli mortalite sonucuna bağlanır.</li>
+        <li>Daha ağır hastalar daha agresif tedavi aldığı için confounding oluşur.</li>
+        <li>Çevrimdışı RL hastada keşif yapmaz; yalnız tarihsel yörüngeleri kullanır.</li>
+        <li>Desteksiz sıvı-vazopresör kombinasyonları sayısal olarak iyi görünse bile klinik olarak güvenilmezdir.</li>
+      </ul>
+    </div>
+    <div class="big-number decorative">01</div>
+  </section>
+
+  <section class="slide" data-kicker="Mimari">
+    <div class="slide-content">
+      <p class="eyebrow" data-reveal>10 adımlı protokol</p>
+      <h2 data-reveal>Model değil, denetlenebilir iş akışı</h2>
+      <div class="rail" data-reveal style="margin-top:var(--content-gap)">
+        <div class="step"><b>1</b><span>Kohort ve Sepsis-3 seçimi</span></div>
+        <div class="step"><b>2</b><span>72 saatlik pencere, 4 saatlik adımlar</span></div>
+        <div class="step"><b>3</b><span>Hasta düzeyi split, train-only fit</span></div>
+        <div class="step"><b>4</b><span>62 boyutlu klinik durum</span></div>
+        <div class="step"><b>5</b><span>5x5 aksiyon ve iki ödül</span></div>
+        <div class="step"><b>6</b><span>Replay ve baseline politikalar</span></div>
+        <div class="step"><b>7</b><span>IQL eğitim katmanı</span></div>
+        <div class="step"><b>8</b><span>OPE: FQE, WIS, ESS</span></div>
+        <div class="step"><b>9</b><span>Güvenlik teşhisleri</span></div>
+        <div class="step"><b>10</b><span>Final sweep ve artifact paketi</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="MDP">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Formülasyon</p>
+        <h2 data-reveal>Sonlu ufuklu karar süreci</h2>
+        <p class="lede" data-reveal>Her geçiş hasta durumunu, 25 ayrık tedavi aksiyonunu ve terminal/ara ödülü taşır.</p>
+      </div>
+      <div class="panel" data-reveal>
+        <p class="formula">M = (S, A, P, R, gamma)<br>(s_t, a_t, r_t, s_{t+1}, done_t)</p>
+        <div class="metric">
+          <div><strong>62</strong><span>state feature</span></div>
+          <div><strong>25</strong><span>action bin</span></div>
+          <div><strong>0.99</strong><span>gamma</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Action Space">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Sıvı x vazopresör</p>
+        <h2 data-reveal>25 ayrık tedavi kutusu</h2>
+        <ul class="bullet-list" data-reveal style="margin-top:var(--content-gap)">
+          <li>Bin 0: tedavi yok.</li>
+          <li>Sıfır dışı dozlar eğitim bölmesi çeyreklikleriyle Q1-Q4.</li>
+          <li>Eşikler train üzerinde öğrenilir, validation/test üzerinde dondurulur.</li>
+        </ul>
+      </div>
+      <div class="action-grid panel" data-reveal aria-label="5x5 aksiyon gridi">
+        <div class="cell">0</div><div class="cell">1</div><div class="cell">2</div><div class="cell">3</div><div class="cell">4</div>
+        <div class="cell">5</div><div class="cell">6</div><div class="cell">7</div><div class="cell">8</div><div class="cell">9</div>
+        <div class="cell">10</div><div class="cell">11</div><div class="cell">12</div><div class="cell">13</div><div class="cell">14</div>
+        <div class="cell">15</div><div class="cell">16</div><div class="cell">17</div><div class="cell">18</div><div class="cell">19</div>
+        <div class="cell">20</div><div class="cell">21</div><div class="cell">22</div><div class="cell">23</div><div class="cell">24</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Rewards">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Ödül tasarımı</p>
+        <h2 data-reveal>Seyrek sonuca SOFA şekillendirmesi eklenir</h2>
+      </div>
+      <div class="grid" data-reveal>
+        <div class="mini-card"><h3>Sparse</h3><p>90 gün sağkalım +15, 90 gün mortalite -15.</p></div>
+        <div class="mini-card"><h3>SOFA-shaped</h3><p>Terminal fayda korunur; ara adımlarda SOFA değişimi küçük sinyal üretir.</p></div>
+        <div class="mini-card"><h3>Kontrol</h3><p>Shaping mortalite hedefinin yerini almaz; final seçim ortak terminal değerlendirmeye bağlanır.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="IQL">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Algoritma seçimi</p>
+        <h2 data-reveal>IQL veri dışı aksiyon maksimumu almaz</h2>
+      </div>
+      <div class="panel" data-reveal>
+        <ul class="bullet-list">
+          <li>Value: expectile regression ile veri içindeki yüksek değerli aksiyonlara yaklaşır.</li>
+          <li>Q: öğrenilen state-value hedefiyle güncellenir.</li>
+          <li>Actor: avantaj ağırlıklı davranış klonlama ile politika çıkarır.</li>
+          <li>Temperature arttıkça getiri potansiyeli ve destek dışına kayma riski birlikte artar.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="big-number decorative">IQL</div>
+  </section>
+
+  <section class="slide" data-kicker="Sweep">
+    <div class="slide-content">
+      <p class="eyebrow" data-reveal>Final tarama</p>
+      <h2 data-reveal>18 aday, 6 finalist, 3 tohum</h2>
+      <div class="grid" data-reveal style="margin-top:var(--content-gap)">
+        <div class="mini-card"><h3>2 ödül</h3><p>Sparse ve SOFA-shaped aynı terminal değerlendirme altında karşılaştırıldı.</p></div>
+        <div class="mini-card"><h3>3 LR rejimi</h3><p>Konservatif, referans ve aktör-konservatif optimizasyon.</p></div>
+        <div class="mini-card"><h3>3 IQL ayarı</h3><p>Güvenli, referans ve iyimser expectile-temperature çiftleri.</p></div>
+        <div class="mini-card"><h3>3 seed</h3><p>Finalistler 42, 123 ve 456 tohumlarıyla yeniden ölçüldü.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Stage 1">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Finalist seçimi</p>
+        <h2 data-reveal>Yüksek değer tek başına yeterli değil</h2>
+        <p class="lede" data-reveal>Seçim FQE/WIS ile destek, uyum, düşük destek uyarısı ve çeşitlilik slotlarını birlikte okur.</p>
+      </div>
+      <div data-reveal>
+        <table class="table panel">
+          <thead><tr><th>Aday</th><th>FQE</th><th>WIS</th><th>Destek</th></tr></thead>
+          <tbody>
+            <tr><td>SOFA conservative safe</td><td>3.169</td><td>8.616</td><td>0.965</td></tr>
+            <tr><td>SOFA conservative baseline</td><td>2.280</td><td>7.009</td><td>0.973</td></tr>
+            <tr><td>Sparse conservative safe</td><td>1.954</td><td>8.740</td><td>0.971</td></tr>
+            <tr><td>Sparse baseline safe</td><td>2.345</td><td>8.125</td><td>0.963</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Evidence">
+    <div class="slide-content twofig">
+      <div>
+        <p class="eyebrow" data-reveal>OPE okuması</p>
+        <h2 data-reveal>Değer ve destek birlikte raporlanır</h2>
+        <p class="lede" data-reveal>Grafikler yüksek değer tahminlerinin destek kütlesiyle birlikte yorumlanmasını sağlar.</p>
+      </div>
+      <figure data-reveal>
+        <img class="figure" src="figures/fqe_vs_support.png" alt="FQE ve destek kütlesi grafiği">
+        <figcaption class="caption">FQE vs support</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Stage 2">
+    <div class="slide-content">
+      <p class="eyebrow" data-reveal>Üç tohumlu sonuç</p>
+      <h2 data-reveal>Final konfigürasyon: SOFA + konservatif + güvenli</h2>
+      <div data-reveal style="margin-top:var(--content-gap)">
+        <table class="table panel">
+          <thead><tr><th>Sıra</th><th>Konfigürasyon</th><th>Skor</th><th>FQE</th><th>WIS</th><th>ESS</th><th>Uyum</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>SOFA konservatif güvenli</td><td>5.858</td><td>2.848</td><td>8.203</td><td>29.41</td><td>0.414</td></tr>
+            <tr><td>2</td><td>SOFA konservatif referans</td><td>5.288</td><td>2.366</td><td>8.286</td><td>26.12</td><td>0.404</td></tr>
+            <tr><td>3</td><td>Sparse konservatif güvenli</td><td>5.262</td><td>2.316</td><td>8.169</td><td>31.32</td><td>0.411</td></tr>
+            <tr><td>4</td><td>Sparse konservatif referans</td><td>5.033</td><td>2.050</td><td>8.536</td><td>26.10</td><td>0.401</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Baselines">
+    <div class="slide-content twofig">
+      <div>
+        <p class="eyebrow" data-reveal>Referans politikalar</p>
+        <h2 data-reveal>Davranış klonlama yüksek WIS üretir ama ESS çöker</h2>
+        <div class="metric" data-reveal>
+          <div><strong>2585</strong><span>Clinician ESS</span></div>
+          <div><strong>1.6</strong><span>BC ESS</span></div>
+          <div><strong>29.4</strong><span>IQL ESS</span></div>
+        </div>
+      </div>
+      <figure data-reveal>
+        <img class="figure" src="figures/baseline_comparison.png" alt="Baseline WIS ve ESS karşılaştırması">
+        <figcaption class="caption">Baseline comparison</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Safety">
+    <div class="slide-content twofig">
+      <div>
+        <p class="eyebrow" data-reveal>Aksiyon teşhisi</p>
+        <h2 data-reveal>Politika klinisyeni kopyalamaz, ama çoğunlukla destek içinde kalır</h2>
+        <ul class="bullet-list" data-reveal style="margin-top:var(--content-gap)">
+          <li>Destek kütlesi: 0.991.</li>
+          <li>Tam-kutu uyum: 0.414.</li>
+          <li>Desteklenmeyen aksiyon sapması: 0.009.</li>
+        </ul>
+      </div>
+      <figure data-reveal>
+        <img class="figure" src="figures/action_heatmap.png" alt="Final politika aksiyon ısı haritası">
+        <figcaption class="caption">Action heatmap</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Uncertainty">
+    <div class="slide-content twofig">
+      <figure data-reveal>
+        <img class="figure" src="figures/bootstrap_ci.png" alt="Bootstrap WIS güven aralıkları">
+        <figcaption class="caption">Bootstrap WIS CI</figcaption>
+      </figure>
+      <div>
+        <p class="eyebrow" data-reveal>Belirsizlik</p>
+        <h2 data-reveal>CI geniş, ESS düşük</h2>
+        <p class="lede" data-reveal>WIS 95% CI = 4.963--10.817. ESS 50 eşiğinin altında olduğu için sonuç klinik üstünlük iddiası değildir.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Stack">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Yeniden üretilebilirlik</p>
+        <h2 data-reveal>Artifact odaklı deney yığını</h2>
+      </div>
+      <div class="grid" data-reveal>
+        <div class="mini-card"><h3>Data</h3><p>Polars, PyArrow, Parquet ve hasta düzeyi manifestolar.</p></div>
+        <div class="mini-card"><h3>Training</h3><p>PyTorch, özelleştirilmiş d3rlpy, CUDA/MPS/auto cihaz seçimi.</p></div>
+        <div class="mini-card"><h3>Config</h3><p>Hydra, run naming, seed ve checkpoint sözleşmeleri.</p></div>
+        <div class="mini-card"><h3>Tracking</h3><p>MLflow, grafik paketi ve IEEE rapor artifact'leri.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Ethics">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Sınırlar</p>
+        <h2 data-reveal>Bu bir yatak başı tedavi önerisi değildir</h2>
+      </div>
+      <ul class="bullet-list panel" data-reveal>
+        <li>Çalışma retrospektif ve gözlemseldir.</li>
+        <li>Durum vektörü hekim niyetini ve ölçülmeyen karıştırıcıları tam kapsamaz.</li>
+        <li>FQE/WIS prospektif klinik kanıt değildir.</li>
+        <li>MIMIC-IV kullanımı PhysioNet, CITI ve DUA sınırları içinde kalmalıdır.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Future Work">
+    <div class="slide-content">
+      <p class="eyebrow" data-reveal>Sonraki araştırma</p>
+      <h2 data-reveal>Daha büyük grid değil, belirsizlik-duyarlı politika güncellemesi</h2>
+      <div class="grid" data-reveal style="margin-top:var(--content-gap)">
+        <div class="mini-card"><h3>Dinamik expectile</h3><p>Yoğun destekte agresif, seyrek bölgede davranışa yakın güncelleme.</p></div>
+        <div class="mini-card"><h3>Multi-step traces</h3><p>Seyrek terminal mortalite sinyalini yörünge boyunca daha hızlı taşıma.</p></div>
+        <div class="mini-card"><h3>World model</h3><p>Gerçekçi sınır durumlarını sentezleyerek değer fonksiyonuna güvenli marj öğretme.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-kicker="Takeaway">
+    <div class="slide-content split">
+      <div>
+        <p class="eyebrow" data-reveal>Son mesaj</p>
+        <p class="quote" data-reveal>Destek sınırı görünürse sonuç daha dürüst olur.</p>
+      </div>
+      <div class="panel red" data-reveal>
+        <h3>Final okuma</h3>
+        <p style="margin-top:1rem">IQL iş akışı klinik üstünlük değil; sızıntısız, destek-duyarlı, retrospektif politika dışı değerlendirme kanıtı üretir.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<nav class="nav nav-dots" aria-label="Slayt navigasyonu" id="dots"></nav>
+<div class="counter" id="counter">1 / 17</div>
+<script>
+  class PresentationController {
+    constructor() {
+      this.slides = [...document.querySelectorAll('.slide')];
+      this.index = 0;
+      this.locked = false;
+      this.touchStartY = 0;
+      this.dots = document.getElementById('dots');
+      this.counter = document.getElementById('counter');
+      this.buildDots();
+      this.observeSlides();
+      this.bindEvents();
+      this.goTo(0, false);
+    }
+    buildDots() {
+      this.slides.forEach((_, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'dot';
+        btn.type = 'button';
+        btn.setAttribute('aria-label', `${i + 1}. slayta git`);
+        btn.addEventListener('click', () => this.goTo(i));
+        this.dots.appendChild(btn);
+      });
+    }
+    observeSlides() {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const i = this.slides.indexOf(entry.target);
+            this.index = i;
+            this.setActive(i);
+          }
+        });
+      }, { threshold: 0.62 });
+      this.slides.forEach(slide => observer.observe(slide));
+    }
+    bindEvents() {
+      document.addEventListener('keydown', event => {
+        if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); this.next(); }
+        if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); this.prev(); }
+        if (event.key === 'Home') this.goTo(0);
+        if (event.key === 'End') this.goTo(this.slides.length - 1);
+      });
+      window.addEventListener('wheel', event => {
+        if (Math.abs(event.deltaY) < 18 || this.locked) return;
+        event.deltaY > 0 ? this.next() : this.prev();
+        this.cooldown();
+      }, { passive: true });
+      window.addEventListener('touchstart', event => { this.touchStartY = event.changedTouches[0].clientY; }, { passive: true });
+      window.addEventListener('touchend', event => {
+        const delta = this.touchStartY - event.changedTouches[0].clientY;
+        if (Math.abs(delta) > 45) delta > 0 ? this.next() : this.prev();
+      }, { passive: true });
+    }
+    cooldown() { this.locked = true; setTimeout(() => { this.locked = false; }, 520); }
+    next() { this.goTo(Math.min(this.index + 1, this.slides.length - 1)); }
+    prev() { this.goTo(Math.max(this.index - 1, 0)); }
+    goTo(i, smooth = true) { this.slides[i].scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }); this.setActive(i); }
+    setActive(i) {
+      this.index = i;
+      this.slides.forEach((slide, idx) => slide.classList.toggle('is-active', idx === i));
+      [...this.dots.children].forEach((dot, idx) => dot.classList.toggle('active', idx === i));
+      this.counter.textContent = `${i + 1} / ${this.slides.length}`;
+    }
+  }
+  new PresentationController();
+</script>
+</body>
+</html>
