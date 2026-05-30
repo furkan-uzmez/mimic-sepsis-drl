@@ -143,6 +143,14 @@ def bootstrap_fqe(
     )
 
 
+def _wis_from_weights_returns(weights: np.ndarray, returns: np.ndarray) -> float:
+    """Compute WIS from precomputed per-episode weights and returns."""
+    weight_sum = float(np.sum(weights))
+    if weight_sum <= 0.0:
+        return 0.0
+    return float(np.sum(weights * returns) / weight_sum)
+
+
 def bootstrap_wis(
     episodes: Sequence[HeldOutEpisode],
     policy: ActionSelectionPolicy,
@@ -188,28 +196,21 @@ def bootstrap_wis(
     else:
         rng = np.random.default_rng()
 
-    ep_ids = _episode_ids(episodes)
-    n_episodes = len(ep_ids)
-    wis_samples = np.empty(n_resamples, dtype=np.float64)
-
-    for i in range(n_resamples):
-        resampled_ids = rng.choice(ep_ids, size=n_episodes, replace=True)
-        resampled_episodes = _episodes_by_ids(episodes, list(resampled_ids))
-        metrics, _ = compute_wis_and_ess(
-            resampled_episodes,
-            policy,
-            gamma=gamma,
-            max_importance_ratio=max_importance_ratio,
-        )
-        wis_samples[i] = metrics.wis
-
-    # ESS computed on full (non-bootstrapped) data
-    full_metrics, _ = compute_wis_and_ess(
+    n_episodes = len(episodes)
+    full_metrics, per_episode = compute_wis_and_ess(
         episodes,
         policy,
         gamma=gamma,
         max_importance_ratio=max_importance_ratio,
     )
+    weights = np.array([episode.importance_weight for episode in per_episode], dtype=np.float64)
+    returns = np.array([episode.discounted_return for episode in per_episode], dtype=np.float64)
+
+    # Reuse per-episode OPE terms; bootstrap only resamples row indices.
+    sample_indices = rng.integers(0, n_episodes, size=(n_resamples, n_episodes))
+    wis_samples = np.empty(n_resamples, dtype=np.float64)
+    for i, indices in enumerate(sample_indices):
+        wis_samples[i] = _wis_from_weights_returns(weights[indices], returns[indices])
 
     mean, lower, upper = _percentile_ci(wis_samples, ci)
     return WISBootstrapCI(

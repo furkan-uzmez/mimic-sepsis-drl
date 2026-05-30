@@ -14,119 +14,117 @@
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{url}
-\usepackage[hidelinks]{hyperref}
 
 \begin{document}
 
-\title{IQL Tabanli Sepsis Tedavi Politikasi Degerlendirmesi Icin Yeniden Uretilebilir Bir Offline Pekistirmeli Ogrenme Is Akisi}
+\title{IQL Tabanlı Sepsis Tedavi Politikası Değerlendirmesi İçin Yeniden Üretilebilir Bir Offline Pekiştirmeli Öğrenme İş Akışı}
 
 \author{
-\IEEEauthorblockN{Furkan}
-\IEEEauthorblockA{MIMIC Sepsis Offline Pekistirmeli Ogrenme Projesi\\
-Retrospektif Klinik Karar Modellemesi Calismasi\\
-Turkiye}
+\IEEEauthorblockN{Furkan Nezih Üzmez}
+\IEEEauthorblockA{230202073}
 }
 
 \maketitle
 
 \begin{abstract}
-Bu rapor, retrospektif sepsis tedavi politikasi degerlendirmesi icin Implicit Q-Learning (IQL) tabanli yeniden uretilebilir bir final tarama is akisini sunar. Calisma, yogun bakim tedavi kararlarini dort saatlik klinik pencerelerden olusan sonlu ufuklu bir Markov karar sureci olarak modeller; her aksiyon intravenoz sivi ve vazopressor siddetinin ayrik bir kombinasyonunu temsil eder. Gelistirilen is akisi, daha once belirlenen orkestrasyon, on tarama denetimi, finalist secimi, coklu tohum dogrulamasi ve rapor artifact uretimi eksiklerini giderir. Stage 0 denetimi artifact varligini, hasta-duzeyi split ayrimini, zamansal gecis hizalamasini, train-only fit sozlesmelerini ve belirgin outcome leakage bulunmadigini dogrular. Stage 1, iki odul varyanti, uc learning-rate rejimi ve uc expectile-temperature ayarindan olusan on sekiz IQL konfigurasyonunu degerlendirir. Cok kriterli secici, finalistleri yalnizca tek bir skora gore degil; validasyon performansi, davranis destegi, klinisyen uyumu, aksiyon entropisi ve guvenlik bayraklari ile secer. Stage 2, secilen alti konfigurasyonu uc tohumlu dogrulama duzeninde degerlendirir. Guncel sonuclar, final secili politikanin SOFA-shaped odul, konservatif learning-rate ve safe IQL ayarini kullanan `iql\_sofa\_shaped\_conservative\_safe' konfigurasyonu oldugunu gosterir. Bu aday uc tohum ortalamasinda FQE=2.848, WIS=8.498, ESS=29.410, destek kütlesi=0.991 ve klinisyen exact-bin uyumu=0.414 elde etmistir. Bununla birlikte ESS 50 esiginin altinda kaldigindan sonuc klinik ustunluk kaniti olarak degil, destek kisiti acikca raporlanan retrospektif off-policy degerlendirme kaniti olarak yorumlanmalidir.
+Bu rapor, retrospektif sepsis tedavi politikası değerlendirmesi için Implicit Q-Learning (IQL) tabanlı yeniden üretilebilir bir final tarama iş akışını sunar. Çalışma, yoğun bakım tedavi kararlarını dört saatlik klinik pencerelerden oluşan sonlu ufuklu bir Markov karar süreci olarak modeller; her aksiyon intravenöz sıvı ve vazopresör şiddetinin ayrık bir kombinasyonunu temsil eder. Geliştirilen iş akışı, daha önce belirlenen orkestrasyon, ön tarama denetimi, finalist seçimi, çoklu tohum doğrulaması ve rapor artifact üretimi eksiklerini giderir. Stage 0 denetimi artifact varlığını, hasta-düzeyi split ayrımını, zamansal geçiş hizalamasını, train-only fit sözleşmelerini ve belirgin outcome leakage bulunmadığını doğrular. Stage 1, iki ödül varyantı, üç learning-rate rejimi ve üç expectile-temperature ayarından oluşan on sekiz IQL konfigürasyonunu değerlendirir. Çok kriterli seçici, finalistleri yalnızca tek bir skora göre değil; validasyon performansı, davranış desteği, klinisyen uyumu, aksiyon entropisi ve güvenlik bayrakları ile seçer. Stage 2, seçilen altı konfigürasyonu üç tohumlu doğrulama düzeninde değerlendirir. Güncel sonuçlar, final seçili politikanın SOFA-shaped ödül, konservatif learning-rate ve safe IQL ayarını kullanan `iql\_sofa\_shaped\_conservative\_safe' konfigürasyonu olduğunu gösterir. Bu aday üç tohum ortalamasında FQE=2.848, WIS=8.498, ESS=29.410, destek kütlesi=0.991 ve klinisyen exact-bin uyumu=0.414 elde etmiştir. Bununla birlikte ESS 50 eşiğinin altında kaldığından sonuç klinik üstünlük kanıtı olarak değil, destek kısıtı açıkça raporlanan retrospektif off-policy değerlendirme kanıtı olarak yorumlanmalıdır.
 \end{abstract}
 
 \begin{IEEEkeywords}
-offline pekistirmeli ogrenme, implicit Q-learning, sepsis, MIMIC-IV, off-policy evaluation, yeniden uretilebilirlik, klinik karar destegi
+offline pekiştirmeli öğrenme, implicit Q-learning, sepsis, MIMIC-IV, off-policy evaluation, yeniden üretilebilirlik, klinik karar desteği
 \end{IEEEkeywords}
 
-\section{Giris}
-Sepsis tedavisi, belirsizlik altinda ardışik kararlar, gecikmeli sonuclar ve klinik siddete bagli confounding iceren bir yogun bakim problemidir. Offline pekistirmeli ogrenme, hasta uzerinde yeni denemeler yapmadan tarihsel klinik trajektorilerden politika ogrenmeyi saglar. Bu ozellik tibbi ortamda kritiktir; cunku cevrimici kesif etik olarak kabul edilemez. Ancak offline ogrenme, desteklenmeyen aksiyonlara kayma, yuksek varyansli off-policy estimatorler ve validasyon artifactlerine asiri uyum gibi riskler tasir.
+\section{Giriş}
+Sepsis tedavisi, belirsizlik altında ardışık kararlar, gecikmeli sonuçlar ve klinik şiddete bağlı confounding içeren bir yoğun bakım problemidir. Offline pekiştirmeli öğrenme, hasta üzerinde yeni denemeler yapmadan tarihsel klinik trajektorilerden politika öğrenmeyi sağlar. Bu özellik tıbbi ortamda kritiktir; çünkü çevrimiçi keşif etik olarak kabul edilemez. Ancak offline öğrenme, desteklenmeyen aksiyonlara kayma, yüksek varyanslı off-policy estimatorler ve validasyon artifactlerine aşırı uyum gibi riskler taşır.
 
-Bu proje, MIMIC-IV tabanli sepsis kohortunda dort saatlik karar pencereleriyle retrospektif politika degerlendirmesi yapar. Aksiyon uzayi, vazopressor ve intravenoz sivi siddetinin $5\times5$ ayrik kombinasyonudur. Final deneyin amaci IQL konfigurasyonlarini iki odul varyanti altinda karsilastirmak, guvenilir finalistleri yalniz validasyon kanitiyle secmek ve raporlanabilir bir artifact bundle uretmektir. Bu calismada protokol, acik denetim kapilari, deterministik konfigurasyon genisletmesi, coklu tohum birlestirmesi ve grafik raporlama ile calisir hale getirilmistir.
+Bu proje, MIMIC-IV tabanlı sepsis kohortunda dört saatlik karar pencereleriyle retrospektif politika değerlendirmesi yapar. Aksiyon uzayı, vazopresör ve intravenöz sıvı şiddetinin $5\times5$ ayrık kombinasyonudur. Final deneyin amacı IQL konfigürasyonlarını iki ödül varyantı altında karşılaştırmak, güvenilir finalistleri yalnız validasyon kanıtıyla seçmek ve raporlanabilir bir artifact bundle üretmektir. Bu çalışmada protokol, açık denetim kapıları, deterministik konfigürasyon genişletmesi, çoklu tohum birleştirmesi ve grafik raporlama ile çalışır hale getirilmiştir.
 
-\section{Ilgili Calismalar}
-Offline pekistirmeli ogrenme sabit veri kumelerinden politika ogrenme problemine odaklanir. IQL, veri disi aksiyonlari dogrudan maksimize etmek yerine expectile value learning ve advantage-weighted behavioral cloning kullanarak konservatif offline ortamlara uygun bir yaklasim sunar \cite{iql}. Conservative Q-learning gibi onceki yontemler extrapolation error riskini farkli duzenlilestirme mekanizmalariyla azaltmaya calisir \cite{cql}. Sepsis alaninda offline politika degerlendirmesi, desteklenmeyen oneriler ve observational confounding nedeniyle ozellikle dikkatli yorumlanmalidir \cite{komorowski2018ai}. Bu projenin veri temeli, de-identified kritik bakim kayitlari saglayan MIMIC-IV veri tabanidir \cite{mimiciv}.
+\section{İlgili Çalışmalar}
+Offline pekiştirmeli öğrenme sabit veri kümelerinden politika öğrenme problemine odaklanır. IQL, veri dışı aksiyonları doğrudan maksimize etmek yerine expectile value learning ve advantage-weighted behavioral cloning kullanarak konservatif offline ortamlara uygun bir yaklaşım sunar \cite{iql}. Conservative Q-learning gibi önceki yöntemler extrapolation error riskini farklı düzenlileştirme mekanizmalarıyla azaltmaya çalışır \cite{cql}. Sepsis alanında offline politika değerlendirmesi, desteklenmeyen öneriler ve observational confounding nedeniyle özellikle dikkatli yorumlanmalıdır \cite{komorowski2018ai}. Bu projenin veri temeli, de-identified kritik bakım kayıtları sağlayan MIMIC-IV veri tabanıdır \cite{mimiciv}.
 
-\section{Yontem}
-\subsection{Klinik Karar Sureci}
-Problem $M=(S,A,P,R,\gamma)$ biciminde sonlu ufuklu bir Markov karar sureci olarak ele alinir. Her episode dort saatlik pencerelere ayrilir. Durum vektoru vital bulgular, laboratuvarlar, tedavi maruziyeti, demografi, eksiklik gostergeleri ve turetilmis fizyolojik degiskenlerden olusur. Discount factor $\gamma=0.99$ olarak sabitlenir; boylece terminal sagkalim sinyali korunurken ara klinik degisimlerin de etkisi kalir.
+\section{Yöntem}
+\subsection{Klinik Karar Süreci}
+Problem $M=(S,A,P,R,\gamma)$ biçiminde sonlu ufuklu bir Markov karar süreci olarak ele alınır. Her episode dört saatlik pencerelere ayrılır. Durum vektörü vital bulgular, laboratuvarlar, tedavi maruziyeti, demografi, eksiklik göstergeleri ve türetilmiş fizyolojik değişkenlerden oluşur. Discount factor $\gamma=0.99$ olarak sabitlenir; böylece terminal sağkalım sinyali korunurken ara klinik değişimlerin de etkisi kalır.
 
-Iki odul varyanti kullanilir. Sparse odul yalniz terminal mortalite/sagkalim utility'sini kullanir. SOFA-shaped odul terminal utility'yi korur ve SOFA degisimine kucuk bir ara sinyal ekler. Model secimi icin iki odul ailesinin ortak terminal utility altinda degerlendirilmesi gerekir; aksi halde odul olcekleri uyumsuz bicimde karsilastirilmis olur.
+İki ödül varyantı kullanılır. Sparse ödül yalnız terminal mortalite/sağkalım utility'sini kullanır. SOFA-shaped ödül terminal utility'yi korur ve SOFA değişimine küçük bir ara sinyal ekler. Model seçimi için iki ödül ailesinin ortak terminal utility altında değerlendirilmesi gerekir; aksi halde ödül ölçekleri uyumsuz biçimde karşılaştırılmış olur.
 
-\subsection{Leakage-Safe Veri Sozlesmeleri}
-Presweep denetimi, final egitim sonucunun raporlanabilir sayilmasindan once veri sozlesmelerini kontrol eder. Denetim; sparse ve SOFA-shaped replay artifactlerinin train, validation ve test splitlerinde mevcut oldugunu; hasta kimliklerinin splitler arasinda cakismadigini; replay artifactlerinin split, aksiyon, preprocessing, indeksleme ve terminal outcome sozlesmelerini paylastigini; ve gecis tuple'larinda durum, aksiyon, sonraki durum, odul ve terminal bayraklarin hizali oldugunu dogrular.
+\subsection{Leakage-Safe Veri Sözleşmeleri}
+Presweep denetimi, final eğitim sonucunun raporlanabilir sayılmasından önce veri sözleşmelerini kontrol eder. Denetim; sparse ve SOFA-shaped replay artifactlerinin train, validation ve test splitlerinde mevcut olduğunu; hasta kimliklerinin splitler arasında çakışmadığını; replay artifactlerinin split, aksiyon, preprocessing, indeksleme ve terminal outcome sözleşmelerini paylaştığını; ve geçiş tuple'larında durum, aksiyon, sonraki durum, ödül ve terminal bayrakların hizalı olduğunu doğrular.
 
 \begin{table}[t]
 \centering
-\caption{Presweep denetim ozeti.}
+\caption{Presweep denetim özeti.}
 \label{tab:audit}
 \begin{tabular}{lrrr}
 \toprule
 Kanıt kalemi & Train & Validation & Test \\
 \midrule
-Split manifest satiri & 12063 & 2585 & 2585 \\
-SOFA-shaped replay satiri & 140635 & 30539 & 30046 \\
-Sparse replay satiri & 140635 & 30539 & 30046 \\
+Split manifest satırı & 12063 & 2585 & 2585 \\
+SOFA-shaped replay satırı & 140635 & 30539 & 30046 \\
+Sparse replay satırı & 140635 & 30539 & 30046 \\
 \midrule
 Split leakage & \multicolumn{3}{c}{Basarili} \\
-Ortak replay sozlesmesi & \multicolumn{3}{c}{Basarili} \\
-Zamansal hizalama & \multicolumn{3}{c}{Basarili} \\
-Outcome leakage taramasi & \multicolumn{3}{c}{Basarili} \\
+Split leakage & \multicolumn{3}{c}{Başarılı} \\
+Ortak replay sözleşmesi & \multicolumn{3}{c}{Başarılı} \\
+Zamansal hizalama & \multicolumn{3}{c}{Başarılı} \\
+Outcome leakage taraması & \multicolumn{3}{c}{Başarılı} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{IQL Tarama Tasarimi}
-Final tarama iki odul varyanti, uc learning-rate rejimi ve uc IQL ayarini on sekiz Stage 1 adayina genisletir. Learning-rate rejimleri actor, critic ve value optimizasyonunu ayri olarak kontrol eder. IQL ayarlari expectile ve temperature degerlerini degistirerek value optimism ve advantage agirlikli politika keskinligini ayarlar.
+\subsection{IQL Tarama Tasarımı}
+Final tarama iki ödül varyantı, üç learning-rate rejimi ve üç IQL ayarını on sekiz Stage 1 adayına genişletir. Learning-rate rejimleri actor, critic ve value optimizasyonunu ayrı olarak kontrol eder. IQL ayarları expectile ve temperature değerlerini değiştirerek value optimism ve advantage ağırlıklı politika keskinliğini ayarlar.
 
 \begin{table}[t]
 \centering
-\caption{IQL final tarama tasarimi.}
+\caption{IQL final tarama tasarımı.}
 \label{tab:grid}
 \begin{tabular}{ll}
 \toprule
-Boyut & Degerler \\
+Boyut & Değerler \\
 \midrule
-Odul varyanti & sparse, SOFA-shaped \\
+Ödül varyantı & sparse, SOFA-shaped \\
 Learning-rate rejimi & konservatif, baseline, actor-konservatif \\
-IQL ayari & safe, baseline, optimistic \\
+IQL ayarı & safe, baseline, optimistic \\
 Stage 1 tohumu & 42 \\
-Stage 2 ek tohumlari & 123, 456 \\
+Stage 2 ek tohumları & 123, 456 \\
 Sabit discount & 0.99 \\
-Aksiyon uzayi & 25 ayrik tedavi bini \\
+Aksiyon uzayı & 25 ayrık tedavi bini \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{algorithm}[t]
-\caption{Final IQL Tarama ve Raporlama Is Akisi}
+\caption{Final IQL Tarama ve Raporlama İş Akışı}
 \label{alg:workflow}
 \begin{algorithmic}[1]
-\STATE Replay, split, preprocessing ve zamansal sozlesmeleri dogrula
-\STATE Odul, learning-rate ve IQL ayarlarini genislet
-\FOR{her Stage 1 adayi}
-  \STATE Tarama tohumu ile politikayi egit
+\STATE Replay, split, preprocessing ve zamansal sözleşmeleri doğrula
+\STATE Ödül, learning-rate ve IQL ayarlarını genişlet
+\FOR{her Stage 1 adayı}
+  \STATE Tarama tohumu ile politikayı eğit
   \STATE Validasyon metriklerini ve destek diagnostiklerini hesapla
 \ENDFOR
-\STATE Guvenlik veya destek kapilarini gecemeyen adaylari ele
-\STATE Composite, odul dengesi, guvenlik ve cesitlilik slotlariyla alti finalist sec
-\FOR{her finalist ve her dogrulama tohumu}
-  \STATE Politika artifactini egit veya yeniden kullan
-  \STATE Coklu tohum degerlendirme kanitini topla
+\STATE Güvenlik veya destek kapılarını geçemeyen adayları ele
+\STATE Composite, ödül dengesi, güvenlik ve çeşitlilik slotlarıyla altı finalist seç
+\FOR{her finalist ve her doğrulama tohumu}
+  \STATE Politika artifactini eğit veya yeniden kullan
+  \STATE Çoklu tohum değerlendirme kanıtını topla
 \ENDFOR
-\STATE Tekrarlanan tohum kanitiyla final konfigurasyonu sec
-\STATE Baseline karsilastirmalari, grafikler ve yeniden uretilebilirlik artifactleri uret
+\STATE Tekrarlanan tohum kanıtıyla final konfigürasyonu seç
+\STATE Baseline karşılaştırmaları, grafikler ve yeniden üretilebilirlik artifactleri üret
 \end{algorithmic}
 \end{algorithm}
 
-\section{Finalist Secim Sonuclari}
-Stage 1 secici alti finalist uretmistir. En yuksek iki aday SOFA-shaped odul ve konservatif learning-rate kullanirken, diger slotlar sparse odul temsilini, guvenlik-destek dengesini, baseline anchor secimini ve cesitlilik backfill kuralini korur. Tablo~\ref{tab:finalists}, secilen adaylari ve ana validasyon diagnostiklerini gosterir.
+\section{Finalist Seçim Sonuçları}
+Stage 1 seçici altı finalist üretmiştir. En yüksek iki aday SOFA-shaped ödül ve konservatif learning-rate kullanırken, diğer slotlar sparse ödül temsilini, güvenlik-destek dengesini, baseline anchor seçimini ve çeşitlilik backfill kuralını korur. Tablo~\ref{tab:finalists}, seçilen adayları ve ana validasyon diagnostiklerini gösterir.
 
 \begin{table*}[t]
 \centering
-\caption{Stage 1 final-alti secim ozeti.}
+\caption{Stage 1 final-altı seçim özeti.}
 \label{tab:finalists}
 \begin{tabular}{rllllrrrr}
 \toprule
-Sira & Slot & Odul & LR & IQL & FQE & WIS & Destek & Uyum \\
+Sıra & Slot & Ödül & LR & IQL & FQE & WIS & Destek & Uyum \\
 \midrule
 1 & top composite & SOFA & konservatif & safe & 3.169 & 8.616 & 0.965 & 0.418 \\
 2 & top composite & SOFA & konservatif & baseline & 2.280 & 7.009 & 0.973 & 0.401 \\
@@ -138,25 +136,25 @@ Sira & Slot & Odul & LR & IQL & FQE & WIS & Destek & Uyum \\
 \end{tabular}
 \end{table*}
 
-Secilen kume, protokolun tek skorlu siralama yerine cok kriterli ve cesitlilik koruyan secim hedefiyle uyumludur. Klinik offline ogrenmede bu onemlidir; cunku yuksek value tahmini, zayif davranis destegi veya asiri dagilim kaymasi durumunda guvenilir olmayabilir.
+Seçilen küme, protokolün tek skorlu sıralama yerine çok kriterli ve çeşitlilik koruyan seçim hedefiyle uyumludur. Klinik offline öğrenmede bu önemlidir; çünkü yüksek value tahmini, zayıf davranış desteği veya aşırı dağılım kayması durumunda güvenilir olmayabilir.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=.98\columnwidth]{figures/fqe_vs_support.png}
-  \caption{Validasyon value tahmini ile davranis destegi diagnostiklerinin birlikte gosterimi. Yuksek value yalniz yeterli destekle birlikte anlamli kabul edilmelidir.}
+  \caption{Validasyon value tahmini ile davranış desteği diagnostiklerinin birlikte gösterimi. Yüksek value yalnız yeterli destekle birlikte anlamlı kabul edilmelidir.}
   \label{fig:fqe_support}
 \end{figure}
 
-\section{Stage 2 ve Baseline Degerlendirmesi}
-Stage 2, alti finalist ve uc tohumdan olusan on sekiz satirlik bir tekrarli-tohum ozeti uretmistir. Her finalist icin seed 42, 123 ve 456 checkpointleri test replay uzerinde yeniden degerlendirilmistir. Final skor; FQE, WIS, ESS, destek kütlesi, klinisyen uyumu, low-support cezasi ve guvenlik bayraklarini birlestiren tekrarli-tohum ortalamasina dayanir. Bu kurala gore final secili konfigurasyon SOFA-shaped, konservatif learning-rate ve safe IQL ayarina sahip `iql\_sofa\_shaped\_conservative\_safe' modelidir.
+\section{Stage 2 ve Baseline Değerlendirmesi}
+Stage 2, altı finalist ve üç tohumdan oluşan on sekiz satırlık bir tekrarlı-tohum özeti üretmiştir. Her finalist için seed 42, 123 ve 456 checkpointleri test replay üzerinde yeniden değerlendirilmiştir. Final skor; FQE, WIS, ESS, destek kütlesi, klinisyen uyumu, low-support cezası ve güvenlik bayraklarını birleştiren tekrarlı-tohum ortalamasına dayanır. Bu kurala göre final seçili konfigürasyon SOFA-shaped, konservatif learning-rate ve safe IQL ayarına sahip `iql\_sofa\_shaped\_conservative\_safe' modelidir.
 
 \begin{table*}[t]
 \centering
-\caption{Stage 2 uc-tohum finalist degerlendirmesi. Skor, FQE/WIS/ESS/destek/uyum ve low-support bilesik secim skorudur.}
+\caption{Stage 2 üç-tohum finalist değerlendirmesi. Skor, FQE/WIS/ESS/destek/uyum ve low-support bileşik seçim skorudur.}
 \label{tab:stage2}
 \begin{tabular}{rllrrrrrr}
 \toprule
-Sira & Konfigurasyon & Ayar & Skor & FQE & WIS & ESS & Destek & Uyum \\
+Sıra & Konfigürasyon & Ayar & Skor & FQE & WIS & ESS & Destek & Uyum \\
 \midrule
 1 & SOFA konservatif safe & final & 5.858 & 2.848 & 8.498 & 29.41 & 0.991 & 0.414 \\
 2 & SOFA konservatif baseline & aday & 5.288 & 2.366 & 8.286 & 26.12 & 0.990 & 0.404 \\
@@ -170,13 +168,13 @@ Sira & Konfigurasyon & Ayar & Skor & FQE & WIS & ESS & Destek & Uyum \\
 
 \begin{table}[t]
 \centering
-\caption{Final secili IQL politikasinin Stage 2 test diagnostikleri. Bootstrap kapali calistirildigi icin WIS guven araligi bu tabloda raporlanmamistir.}
+\caption{Final seçili IQL politikasının Stage 2 test diagnostikleri. Bootstrap kapalı çalıştırıldığı için WIS güven aralığı bu tabloda raporlanmamıştır.}
 \label{tab:baseline}
 \begin{tabular}{lrrrrr}
 \toprule
 Politika & FQE & WIS & ESS & Destek & Uyum \\
 \midrule
-Secili IQL & 2.848 & 8.498 & 29.41 & 0.991 & 0.414 \\
+Seçili IQL & 2.848 & 8.498 & 29.41 & 0.991 & 0.414 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -184,49 +182,49 @@ Secili IQL & 2.848 & 8.498 & 29.41 & 0.991 & 0.414 \\
 \begin{figure}[t]
   \centering
   \includegraphics[width=.98\columnwidth]{figures/baseline_comparison.png}
-  \caption{Final secili IQL politikasi ve referans baseline gosterimi. Secili IQL degeri gercek Stage 2 degerlendirmesinden, referans baseline cubuklari ise rapor artifactinde kullanilan karsilastirma gosteriminden gelir.}
+  \caption{Final seçili IQL politikası ve referans baseline gösterimi. Seçili IQL değeri gerçek Stage 2 değerlendirmesinden, referans baseline çubukları ise rapor artifactinde kullanılan karşılaştırma gösteriminden gelir.}
   \label{fig:baseline_comparison}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=.98\columnwidth]{figures/seed_variance.png}
-  \caption{Stage 2 finalistleri icin tekrarli-tohum FQE degiskenligi. Daha dusuk deger, ayni konfigurasyonun tohumlar arasinda daha stabil oldugunu gosterir.}
+  \caption{Stage 2 finalistleri için tekrarlı-tohum FQE değişkenliği. Daha düşük değer, aynı konfigürasyonun tohumlar arasında daha stabil olduğunu gösterir.}
   \label{fig:seed_variance}
 \end{figure}
 
-\section{Aksiyon ve Guvenlik Diagnostikleri}
-Aksiyon dagilimi diagnostikleri zorunludur; cunku ogrenilen klinik politika iyi value tahminleri uretirken observational veride nadir veya desteklenmeyen aksiyonlara kayabilir. Bu nedenle action heatmap, support mass, low-support rate, klinisyen uyumu ve aksiyon entropisiyle birlikte yorumlanmalidir.
+\section{Aksiyon ve Güvenlik Diagnostikleri}
+Aksiyon dağılımı diagnostikleri zorunludur; çünkü öğrenilen klinik politika iyi value tahminleri üretirken observational veride nadir veya desteklenmeyen aksiyonlara kayabilir. Bu nedenle action heatmap, support mass, low-support rate, klinisyen uyumu ve aksiyon entropisiyle birlikte yorumlanmalıdır.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=.98\columnwidth]{figures/action_heatmap.png}
-  \caption{Final politika analizi icin uretilmis aksiyon dagilimi heatmap'i. Tedavi gridi vazopressor ve sivi siddetinin ayrik kombinasyonlarini temsil eder.}
+  \caption{Final politika analizi için üretilmiş aksiyon dağılımı heatmap'i. Tedavi gridi vazopresör ve sıvı şiddetinin ayrık kombinasyonlarını temsil eder.}
   \label{fig:action_heatmap}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=.98\columnwidth]{figures/bootstrap_ci.png}
-  \caption{Uc tohumluk FQE standart hatasindan turetilmis yaklasik 95\% yari-genislik. Bootstrap kapali oldugundan bu sekil bootstrap WIS guven araligi degil, seed-duyarlilik belirsizligi olarak yorumlanmalidir.}
+  \caption{Üç tohumluk FQE standart hatasından türetilmiş yaklaşık 95\% yarı-genişlik. Bootstrap kapalı olduğundan bu şekil bootstrap WIS güven aralığı değil, seed-duyarlılık belirsizliği olarak yorumlanmalıdır.}
   \label{fig:bootstrap_ci}
 \end{figure}
 
-Stage 2 finalistlerinde destek kütlesi yaklasik 0.990--0.991, klinisyen exact-bin uyumu ise yaklasik 0.401--0.418 araligindadir. Bu degerler, secilen adaylarin tamamen desteksiz politikalar olmadigini gosterir. Buna karsin ESS degerleri tum finalistlerde 50 esiginin altindadir; bu nedenle WIS tabanli siralama yuksek varyans riskiyle birlikte raporlanmalidir.
+Stage 2 finalistlerinde destek kütlesi yaklaşık 0.990--0.991, klinisyen exact-bin uyumu ise yaklaşık 0.401--0.418 aralığındadır. Bu değerler, seçilen adayların tamamen desteksiz politikalar olmadığını gösterir. Buna karşın ESS değerleri tüm finalistlerde 50 eşiğinin altındadır; bu nedenle WIS tabanlı sıralama yüksek varyans riskiyle birlikte raporlanmalıdır.
 
-\section{Yeniden Uretilebilirlik ve Tamamlanma Durumu}
-Tamamlanan is akisi, protokol incelemesinde belirlenen ana eksikleri karsilar: final IQL sweep runner, on sekiz konfigurasyonlu grid, workflow seviyesinde orkestrasyon, presweep audit, final-alti secim mantigi, tekrarli-tohum Stage 2 birlestirmesi, baseline karsilastirma artifactleri ve final grafik raporlari. Uretilen artifact seti presweep audit sonucunu, Stage 1 secim tablosunu, Stage 2 seed ozetini, final metrics bundle'i, baseline karsilastirmasini ve bes grafik ciktisini icerir. Guncel Stage 2 degerlendirmesi `results/iql\_final/stage2/finalists\_evaluation/iql\_metrics\_summary.csv' dosyasinda on sekiz finalist-tohum satiri olarak saklanmistir.
+\section{Yeniden Üretilebilirlik ve Tamamlanma Durumu}
+Tamamlanan iş akışı, protokol incelemesinde belirlenen ana eksikleri karşılar: final IQL sweep runner, on sekiz konfigürasyonlu grid, workflow seviyesinde orkestrasyon, presweep audit, final-altı seçim mantığı, tekrarlı-tohum Stage 2 birleştirmesi, baseline karşılaştırma artifactleri ve final grafik raporları. Üretilen artifact seti presweep audit sonucunu, Stage 1 seçim tablosunu, Stage 2 seed özetini, final metrics bundle'ı, baseline karşılaştırmasını ve beş grafik çıktısını içerir. Güncel Stage 2 değerlendirmesi sonuçlarında on sekiz finalist-tohum satırı olarak saklanmıştır.
 
-Kalan temel sinir, estimator belirsizligidir. Protokol, final secimin ve test raporlamasinin ortak terminal utility altinda off-policy tahminlere dayanmasini ister. Mevcut yeniden degerlendirme FQE, WIS, ESS, destek ve uyum metriklerini uretmistir; ancak bootstrap WIS guven araliklari hizli calistirmada kapatilmistir. Dolayisiyla sistem deneysel is akisi olarak yeniden uretilebilir durumdadir; ancak dusuk ESS ve eksik bootstrap CI nedeniyle final politika sonucu klinik performans kaniti olarak yorumlanmamalidir.
+Kalan temel sınır, estimator belirsizliğidir. Protokol, final seçimin ve test raporlamasının ortak terminal utility altında off-policy tahminlere dayanmasını ister. Mevcut yeniden değerlendirme FQE, WIS, ESS, destek ve uyum metriklerini üretmiştir; ancak bootstrap WIS güven aralıkları hızlı çalıştırmada kapatılmıştır. Dolayısıyla sistem deneysel iş akışı olarak yeniden üretilebilir durumdadır; ancak düşük ESS ve eksik bootstrap CI nedeniyle final politika sonucu klinik performans kanıtı olarak yorumlanmamalıdır.
 
-\section{Sinirlar ve Etik Degerlendirme}
-Bu calisma retrospektif ve observational niteliktedir. Ogrenilen politika yatak basi tedavi onerisi olarak yorumlanmamalidir. Durum temsili gizli klinik siddeti, kontrendikasyonlari, hekim niyetini ve olculmeyen confounding etkilerini tam olarak kapsayamaz. MIMIC-IV verisi de-identified olsa da credentialing ve data-use yukumluluklerine tabidir. Son olarak FQE ve WIS istatistiksel estimatorlerdir; prospektif klinik kanit yerine gecmez.
+\section{Sınırlar ve Etik Değerlendirme}
+Bu çalışma retrospektif ve observational niteliktedir. Öğrenilen politika yatak başı tedavi önerisi olarak yorumlanmamalıdır. Durum temsili gizli klinik şiddeti, kontrendikasyonları, hekim niyetini ve ölçülmeyen confounding etkilerini tam olarak kapsayamaz. MIMIC-IV verisi de-identified olsa da credentialing ve data-use yükümlülüklerine tabidir. Son olarak FQE ve WIS istatistiksel estimatorlerdir; prospektif klinik kanıt yerine geçmez.
 
-\section{Sonuc}
-Gelistirilen IQL final tarama is akisi, protokol duzeyindeki deney tasarimini sepsis tedavi politikasi degerlendirmesi icin yeniden uretilebilir bir offline pekistirmeli ogrenme pipeline'ina donusturur. Veri sozlesmesi denetimleri kurulmus, IQL grid'i genisletilmis, finalistler cok kriterli kapilarla secilmis, tekrarli tohumlar birlestirilmis ve rapora hazir grafikler uretilmistir. Stage 0 denetimi basarilidir ve Stage 1 alti cesitli, destek-duyarli finalist belirlemistir. Guncel Stage 2 sonucuna gore final konfigurasyon `iql\_sofa\_shaped\_conservative\_safe' olarak secilmistir. Bu model FQE=2.848 ve WIS=8.498 ortalamasiyla en yuksek bilesik skoru elde etse de ESS=29.41 ile destek esiginin altindadir; bu nedenle sonuc klinik degil metodolojik ve retrospektif OPE kaniti olarak raporlanmalidir.
+\section{Sonuç}
+Geliştirilen IQL final tarama iş akışı, protokol düzeyindeki deney tasarımını sepsis tedavi politikası değerlendirmesi için yeniden üretilebilir bir offline pekiştirmeli öğrenme pipeline'ına dönüştürür. Veri sözleşmesi denetimleri kurulmuş, IQL grid'i genişletilmiş, finalistler çok kriterli kapılarla seçilmiş, tekrarlı tohumlar birleştirilmiş ve rapora hazır grafikler üretilmiştir. Stage 0 denetimi başarılıdır ve Stage 1 altı çeşitli, destek-duyarlı finalist belirlemiştir. Güncel Stage 2 sonucuna göre final konfigürasyon `iql\_sofa\_shaped\_conservative\_safe' olarak seçilmiştir. Bu model FQE=2.848 ve WIS=8.498 ortalamasıyla en yüksek bileşik skoru elde etse de ESS=29.41 ile destek eşiğinin altındadır; bu nedenle sonuç klinik değil metodolojik ve retrospektif OPE kanıtı olarak raporlanmalıdır.
 
-\section*{Tesekkur}
-Bu rapor, retrospektif MIMIC sepsis offline pekistirmeli ogrenme projesi kapsaminda hazirlanmistir. Analiz yalniz akademik ve metodolojik inceleme amaclidir.
+\section*{Teşekkür}
+Bu rapor, retrospektif MIMIC sepsis offline pekiştirmeli öğrenme projesi kapsamında hazırlanmıştır. Analiz yalnız akademik ve metodolojik inceleme amaçlıdır.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

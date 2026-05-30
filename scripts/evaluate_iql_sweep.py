@@ -1325,11 +1325,12 @@ def main(argv: list[str] | None = None) -> None:
                 total_checkpoints,
                 checkpoint,
             )
+            checkpoint_seed = int(_checkpoint_config_metadata(checkpoint).get("seed") or args.seed + idx - 1)
             result, rows, policy_actions = _evaluate_checkpoint(
                 checkpoint,
                 episodes,
                 state_dim=state_dim,
-                seed=args.seed + idx - 1,
+                seed=checkpoint_seed,
                 output_dir=output_dir,
                 min_support_prob=args.min_support_prob,
                 min_support_count=args.min_support_count,
