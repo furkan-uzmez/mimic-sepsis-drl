@@ -21,15 +21,28 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
+\bibitem{mimiciv}
+A.~E.~W. Johnson, L.~Bulgarelli, L.~Shen, A.~Gayles, A.~Shammout, S.~Horng,
+  T.~J. Pollard, S.~Hao, B.~Moody, B.~Gow \emph{et~al.}, ``Mimic-iv, a freely
+  accessible electronic health record dataset,'' \emph{Scientific Data},
+  vol.~10, no.~1, p.~1, 2023.
+
 \bibitem{levine2020offline}
 S.~Levine, A.~Kumar, G.~Tucker, and J.~Fu, ``Offline reinforcement learning:
   Tutorial, review, and perspectives on open problems,'' \emph{arXiv preprint
   arXiv:2005.01643}, 2020.
 
-\bibitem{voloshin2021ope}
-C.~Voloshin, H.~M. Le, N.~Jiang, and Y.~Yue, ``Empirical study of off-policy
-  policy evaluation for reinforcement learning,'' in \emph{NeurIPS Datasets and
-  Benchmarks}, 2021.
+\bibitem{gottesman2019guidelines}
+O.~Gottesman, F.~Johansson, M.~Komorowski, A.~Faisal, D.~Sontag,
+  F.~Doshi-Velez, and L.~A. Celi, ``Guidelines for reinforcement learning in
+  healthcare,'' \emph{Nature Medicine}, vol.~25, no.~1, pp. 16--18, 2019.
+
+\bibitem{who2020sepsis}
+K.~E. Rudd, S.~C. Johnson, K.~M. Agesa, K.~A. Shackelford, D.~Tsoi, D.~R.
+  Kievlan, D.~V. Colombara, K.~S. Ikuta, N.~Kissoon, S.~Finfer \emph{et~al.},
+  ``Global, regional, and national sepsis incidence and mortality, 1990--2017:
+  analysis for the global burden of disease study,'' \emph{The Lancet}, vol.
+  395, no. 10219, pp. 200--211, 2020.
 
 \bibitem{cql}
 A.~Kumar, A.~Zhou, G.~Tucker, and S.~Levine, ``Conservative q-learning for
@@ -58,16 +71,25 @@ A.~Raghu, M.~Komorowski, L.~A. Celi, P.~Szolovits, and M.~Ghassemi,
   reinforcement learning approach,'' in \emph{Proceedings of the 2nd Machine
   Learning for Healthcare Conference}, 2017, pp. 147--163.
 
-\bibitem{gottesman2019guidelines}
-O.~Gottesman, F.~Johansson, M.~Komorowski, A.~Faisal, D.~Sontag,
-  F.~Doshi-Velez, and L.~A. Celi, ``Guidelines for reinforcement learning in
-  healthcare,'' \emph{Nature Medicine}, vol.~25, no.~1, pp. 16--18, 2019.
+\bibitem{mimicsepsis2025}
+Y.~Huang, Z.~Yang, and A.~Rahmani, ``Mimic-sepsis: A curated benchmark for
+  modeling and learning from sepsis trajectories in the icu,'' \emph{arXiv
+  preprint arXiv:2510.24500}, 2025.
 
-\bibitem{mimiciv}
-A.~E.~W. Johnson, L.~Bulgarelli, L.~Shen, A.~Gayles, A.~Shammout, S.~Horng,
-  T.~J. Pollard, S.~Hao, B.~Moody, B.~Gow \emph{et~al.}, ``Mimic-iv, a freely
-  accessible electronic health record dataset,'' \emph{Scientific Data},
-  vol.~10, no.~1, p.~1, 2023.
+\bibitem{singer2016sepsis3}
+M.~Singer, C.~S. Deutschman, C.~W. Seymour, M.~Shankar-Hari, D.~Annane,
+  M.~Bauer, R.~Bellomo, G.~R. Bernard, J.-D. Chiche, C.~M. Coopersmith
+  \emph{et~al.}, ``The third international consensus definitions for sepsis and
+  septic shock (sepsis-3),'' \emph{JAMA}, vol. 315, no.~8, pp. 801--810, 2016.
+
+\bibitem{peng1996qlambda}
+J.~Peng and R.~J. Williams, ``Incremental multi-step q-learning,''
+  \emph{Machine Learning}, vol.~22, no. 1--3, pp. 283--290, 1996.
+
+\bibitem{precup2000offpolicy}
+D.~Precup, R.~S. Sutton, and S.~P. Singh, ``Eligibility traces for off-policy
+  policy evaluation,'' in \emph{Proceedings of the Seventeenth International
+  Conference on Machine Learning}, 2000, pp. 759--766.
 
 \bibitem{evans2021ssc}
 L.~Evans, A.~Rhodes, W.~Alhazzani, M.~Antonelli, C.~M. Coopersmith, C.~French,
@@ -76,29 +98,15 @@ L.~Evans, A.~Rhodes, W.~Alhazzani, M.~Antonelli, C.~M. Coopersmith, C.~French,
   sepsis and septic shock 2021,'' \emph{Critical Care Medicine}, vol.~49,
   no.~11, pp. e1063--e1143, 2021.
 
-\bibitem{peng1996qlambda}
-J.~Peng and R.~J. Williams, ``Incremental multi-step q-learning,''
-  \emph{Machine Learning}, vol.~22, no. 1--3, pp. 283--290, 1996.
+\bibitem{safeoffline2026}
+B.~Zhang and Y.~Mi, ``Safe offline reinforcement learning for sepsis treatment:
+  A two-stage framework combining constraint-aware learning with runtime safety
+  filtering,'' \emph{Transactions on Artificial Intelligence}, vol.~2, no.~1,
+  2026.
 
-\bibitem{singer2016sepsis3}
-M.~Singer, C.~S. Deutschman, C.~W. Seymour, M.~Shankar-Hari, D.~Annane,
-  M.~Bauer, R.~Bellomo, G.~R. Bernard, J.-D. Chiche, C.~M. Coopersmith
-  \emph{et~al.}, ``The third international consensus definitions for sepsis and
-  septic shock (sepsis-3),'' \emph{JAMA}, vol. 315, no.~8, pp. 801--810, 2016.
-
-\bibitem{sutton2018rl}
-R.~S. Sutton and A.~G. Barto, \emph{Reinforcement Learning: An Introduction},
-  2nd~ed.\hskip 1em plus 0.5em minus 0.4em\relax MIT Press, 2018.
-
-\bibitem{liu2020healthcare}
-S.~Liu, K.~C. See, K.~Y. Ngiam, L.~A. Celi, X.~Sun, and M.~Feng,
-  ``Reinforcement learning for clinical decision support in critical care:
-  Comprehensive review,'' \emph{Journal of Medical Internet Research}, vol.~22,
-  no.~7, p. e18477, 2020.
-
-\bibitem{precup2000offpolicy}
-D.~Precup, R.~S. Sutton, and S.~P. Singh, ``Eligibility traces for off-policy
-  policy evaluation,'' in \emph{Proceedings of the Seventeenth International
-  Conference on Machine Learning}, 2000, pp. 759--766.
+\bibitem{voloshin2021ope}
+C.~Voloshin, H.~M. Le, N.~Jiang, and Y.~Yue, ``Empirical study of off-policy
+  policy evaluation for reinforcement learning,'' in \emph{NeurIPS Datasets and
+  Benchmarks}, 2021.
 
 \end{thebibliography}
