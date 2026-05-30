@@ -1258,7 +1258,7 @@ def _write_summary_tables(results: Sequence[CheckpointEval], output_dir: Path) -
 
 
 def main(argv: list[str] | None = None) -> None:
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stderr)
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stderr, force=True)
     parser = argparse.ArgumentParser(prog="evaluate_iql_sweep")
     parser.add_argument("--stage", type=int, choices=(1, 2), default=None)
     parser.add_argument("--checkpoint-dir", default="checkpoints/iql")
@@ -1308,18 +1308,28 @@ def main(argv: list[str] | None = None) -> None:
             raise SystemExit(f"No IQL checkpoints found under {checkpoint_dir}")
         logger.info("Evaluating %d checkpoint(s) from %s", len(checkpoints), checkpoint_dir)
 
+        logger.info("Loading held-out episodes from %s", test_data)
         episodes = _load_episodes(test_data)
+        logger.info("Loaded %d held-out episode(s)", len(episodes))
         state_dim = args.state_dim or _state_dim_from_parquet(test_data) or DEFAULT_STATE_DIM
+        logger.info("Using state_dim=%d", state_dim)
         results = []
         best_rows = []
         best_policy_actions = []
 
-        for idx, checkpoint in enumerate(checkpoints):
+        total_checkpoints = len(checkpoints)
+        for idx, checkpoint in enumerate(checkpoints, start=1):
+            logger.info(
+                "[%d/%d] evaluating %s",
+                idx,
+                total_checkpoints,
+                checkpoint,
+            )
             result, rows, policy_actions = _evaluate_checkpoint(
                 checkpoint,
                 episodes,
                 state_dim=state_dim,
-                seed=args.seed + idx,
+                seed=args.seed + idx - 1,
                 output_dir=output_dir,
                 min_support_prob=args.min_support_prob,
                 min_support_count=args.min_support_count,
@@ -1332,7 +1342,16 @@ def main(argv: list[str] | None = None) -> None:
             if not best_rows or result.fqe_mean >= max(r.fqe_mean for r in results[:-1]):
                 best_rows = rows
                 best_policy_actions = policy_actions
-            logger.info("%s fqe=%.4f wis=%.4f ess=%.2f low_support=%.3f", checkpoint.name, result.fqe_mean, result.wis_mean, result.ess, result.low_support_action_rate)
+            logger.info(
+                "[%d/%d] done %s fqe=%.4f wis=%.4f ess=%.2f low_support=%.3f",
+                idx,
+                total_checkpoints,
+                checkpoint.name,
+                result.fqe_mean,
+                result.wis_mean,
+                result.ess,
+                result.low_support_action_rate,
+            )
 
     clinician_actions = _clinician_actions(episodes)
 
