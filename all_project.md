@@ -55,12 +55,13 @@ Proje, katı bir bağımlılık zinciri içinde 10 ana faza (Phase) bölünmüş
 *   Model altyapısı cihaz-bağımsız (device-agnostic) tasarlanmıştır; yani eğitim kodları değiştirilmeden hem Apple Silicon (MPS / Mac) hem de NVIDIA (CUDA / GPU) üzerinde sorunsuz şekilde çalışabilmektedir.
 
 ### Adım 9: Değerlendirme, Güvenlik ve Raporlama
-*   Modellerin doğruluğu **Offline Policy Evaluation (OPE)** metrikleriyle (FQE, WIS, ESS) değerlendirilmiştir.
-*   Modelin doktordan çok uzaklaşıp saçma sapan dozlar önermesini tespit etmek için *Support Mass* ve *Low-Support Rate* gibi güvenlik teşhis araçları (diagnostics) sisteme gömülmüştür.
+*   Modellerin doğruluğu **Offline Policy Evaluation (OPE)** metrikleriyle (FQE, WIS, ESS) değerlendirilmiştir. OPE sonuçları sadece tek bir sayı olarak verilmemiş, tıbbi istatistik kuralları gereği **Hasta Bazlı Bootstrap %95 Güven Aralıkları (CI)** hesaplanarak raporlanmıştır.
+*   Modelin doktordan çok uzaklaşıp saçma sapan dozlar önermesini tespit etmek için *Support Mass* ve *Low-Support Rate* gibi güvenlik teşhis araçları (diagnostics) sisteme gömülmüştür. Ayrıca yüksek riskli alt hasta grupları da izlenmiştir.
 
 ### Adım 10: Nihai Çoklu-Tohum (Multi-Seed) Tarama ve IEEE Raporu (Final Sweep)
 *   **IQL Protokolü:** 2 ödül varyantı × 3 Learning Rate rejimi × 3 IQL hiperparametresi olmak üzere toplam **18 farklı eğitim ayarı** test edilmiştir.
 *   **Finalist Seçimi (Güvenlik Odaklı):** Modeller seçilirken test setine **asla bakılmamış**, seçimler Validation setinde "çok kriterli bir puanlama" ile yapılıp 6 finalist seçilmiştir. Bu seçimde sırf skoru yüksek diye güvensiz modellere izin verilmemiştir; *en dengeli, doktora en çok uyan (clinician agreement) ve en iyi desteklenen (support)* modeller listeye dâhil edilerek çeşitlilik korunmuştur.
+*   **Tohum (Seed) Stratejisi ile Sağlamlık Testi:** Seçilen bu 6 modelin başarısının "şans eseri" olmadığını kanıtlamak için, modeller Stage 2'de farklı rastgelelik çekirdekleriyle (Seed 123, Seed 456 vb.) baştan eğitilip, sonuçların kararlılığı (varyans) hesaplanmıştır.
 *   **IEEE Raporunun (iql_final_ieee_report.pdf) Çıktısı:** Rapor, sızıntı denetimlerinin %100 başarıyla geçildiğini, model seçiminin çeşitlilik korunarak yapıldığını kanıtlamaktadır. Ancak raporda metodolojik dürüstlük gereği, IQL için nihai politikanın test setindeki FQE ve WIS metriklerinin entegrasyon eksiği nedeniyle *henüz sayısal olarak hesaplanamadığı (H.D. - Hesaplanamayan Değer)* açıkça beyan edilmiştir. 
 
 ---
