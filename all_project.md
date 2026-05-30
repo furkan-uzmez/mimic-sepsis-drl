@@ -64,7 +64,15 @@ Proje, katı bir bağımlılık zinciri içinde 10 ana faza (Phase) bölünmüş
 
 ### Adım 10: Nihai Çoklu-Tohum (Multi-Seed) Tarama ve IEEE Raporu (Final Sweep)
 *   **IQL Protokolü:** 2 ödül varyantı × 3 Learning Rate rejimi × 3 IQL hiperparametresi olmak üzere toplam **18 farklı eğitim ayarı** test edilmiştir.
-*   **Finalist Seçimi (Güvenlik Odaklı):** Modeller seçilirken test setine **asla bakılmamış**, seçimler Validation setinde "çok kriterli bir puanlama" ile yapılıp 6 finalist seçilmiştir. Bu seçimde sırf skoru yüksek diye güvensiz modellere izin verilmemiştir; *en dengeli, doktora en çok uyan (clinician agreement) ve en iyi desteklenen (support)* modeller listeye dâhil edilerek çeşitlilik korunmuştur.<>
+*   **Finalist Seçimi (Fallback / Yedek Mekanizma):** 18 modelin tamamı Validation (doğrulama) aşamasında sert güvenlik kurallarına (hard gates) tabi tutulmuştur. Ancak hiçbir model Efektif Örneklem Boyutu (ESS) > 50 barajını geçememiştir. Sistem bu nedenle otomatik olarak *Fallback (Yedek) Seçim Mekanizmasını* devreye sokmuş ve modelleri şu ağırlıklı formüllerle tekrar sıralamıştır:
+    *   **Ana Skor (Composite Score):** FQE (%45) + FQE Alt Sınır (%15) + WIS (%15) + ESS (%10) + Support Mass (%10) puanları toplanmış; Low-Support (-%15) ve Güvenlik Riski (-%10) cezalandırılmıştır.
+    *   **Güvenlik Skoru (Safety/Support Score):** Ağırlıklı olarak ESS, doktorla uyum (clinician agreement) ve aksiyon entropisine dayalı ikinci bir güvenlik puanlaması hesaplanmıştır.
+    *   Bu skorlara göre 6 özel slot doldurulmuştur:
+        1. ve 2. Slot (Top Composite): Ana skoru en yüksek iki model.
+        3. Slot (Best Sparse): Sadece ölüm/kalım (sparse) ödülüyle eğitilen en iyi model.
+        4. Slot (Safety Support): Güvenlik skoru en yüksek olan model.
+        5. Slot (Baseline Anchor): Referans kabul edilen varsayılan ayarlara sahip model.
+        6. Slot (Diversity Backfill): Çeşitliliği korumak için listeyi tamamlayan model.
 *   **Tohum (Seed) Stratejisi ile Sağlamlık Testi:** Seçilen bu 6 modelin başarısının "şans eseri" olmadığını kanıtlamak için, modeller Stage 2'de farklı rastgelelik çekirdekleriyle (Seed 123, Seed 456 vb.) baştan eğitilip, sonuçların kararlılığı (varyans) hesaplanmıştır.
 *   **IEEE Raporunun (iql_final_ieee_report.pdf) Çıktısı:** Rapor, sızıntı denetimlerinin %100 başarıyla geçildiğini, model seçiminin çeşitlilik korunarak yapıldığını kanıtlamaktadır. Ancak raporda metodolojik dürüstlük gereği, IQL için nihai politikanın test setindeki FQE ve WIS metriklerinin entegrasyon eksiği nedeniyle *henüz sayısal olarak hesaplanamadığı (H.D. - Hesaplanamayan Değer)* açıkça beyan edilmiştir. 
 
