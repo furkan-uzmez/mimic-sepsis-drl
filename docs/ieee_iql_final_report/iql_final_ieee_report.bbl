@@ -21,6 +21,19 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
+\bibitem{singer2016sepsis3}
+M.~Singer, C.~S. Deutschman, C.~W. Seymour, M.~Shankar-Hari, D.~Annane,
+  M.~Bauer, R.~Bellomo, G.~R. Bernard, J.-D. Chiche, C.~M. Coopersmith
+  \emph{et~al.}, ``The third international consensus definitions for sepsis and
+  septic shock (sepsis-3),'' \emph{JAMA}, vol. 315, no.~8, pp. 801--810, 2016.
+
+\bibitem{who2020sepsis}
+K.~E. Rudd, S.~C. Johnson, K.~M. Agesa, K.~A. Shackelford, D.~Tsoi, D.~R.
+  Kievlan, D.~V. Colombara, K.~S. Ikuta, N.~Kissoon, S.~Finfer \emph{et~al.},
+  ``Global, regional, and national sepsis incidence and mortality, 1990--2017:
+  analysis for the global burden of disease study,'' \emph{The Lancet}, vol.
+  395, no. 10219, pp. 200--211, 2020.
+
 \bibitem{levine2020offline}
 S.~Levine, A.~Kumar, G.~Tucker, and J.~Fu, ``Offline reinforcement learning:
   Tutorial, review, and perspectives on open problems,'' \emph{arXiv preprint
@@ -30,21 +43,6 @@ S.~Levine, A.~Kumar, G.~Tucker, and J.~Fu, ``Offline reinforcement learning:
 C.~Voloshin, H.~M. Le, N.~Jiang, and Y.~Yue, ``Empirical study of off-policy
   policy evaluation for reinforcement learning,'' in \emph{NeurIPS Datasets and
   Benchmarks}, 2021.
-
-\bibitem{cql}
-A.~Kumar, A.~Zhou, G.~Tucker, and S.~Levine, ``Conservative q-learning for
-  offline reinforcement learning,'' in \emph{Advances in Neural Information
-  Processing Systems}, 2020.
-
-\bibitem{bcq}
-S.~Fujimoto, D.~Meger, and D.~Precup, ``Off-policy deep reinforcement learning
-  without exploration,'' in \emph{Proceedings of the 36th International
-  Conference on Machine Learning}, 2019, pp. 2052--2062.
-
-\bibitem{iql}
-I.~Kostrikov, A.~Nair, and S.~Levine, ``Offline reinforcement learning with
-  implicit q-learning,'' in \emph{International Conference on Learning
-  Representations}, 2022.
 
 \bibitem{komorowski2018ai}
 M.~Komorowski, L.~A. Celi, O.~Badawi, A.~C. Gordon, and A.~A. Faisal, ``The
@@ -63,12 +61,6 @@ O.~Gottesman, F.~Johansson, M.~Komorowski, A.~Faisal, D.~Sontag,
   F.~Doshi-Velez, and L.~A. Celi, ``Guidelines for reinforcement learning in
   healthcare,'' \emph{Nature Medicine}, vol.~25, no.~1, pp. 16--18, 2019.
 
-\bibitem{mimiciv}
-A.~E.~W. Johnson, L.~Bulgarelli, L.~Shen, A.~Gayles, A.~Shammout, S.~Horng,
-  T.~J. Pollard, S.~Hao, B.~Moody, B.~Gow \emph{et~al.}, ``Mimic-iv, a freely
-  accessible electronic health record dataset,'' \emph{Scientific Data},
-  vol.~10, no.~1, p.~1, 2023.
-
 \bibitem{evans2021ssc}
 L.~Evans, A.~Rhodes, W.~Alhazzani, M.~Antonelli, C.~M. Coopersmith, C.~French,
   F.~R. Machado, L.~McIntyre, M.~Ostermann, H.~C. Prescott \emph{et~al.},
@@ -80,11 +72,11 @@ L.~Evans, A.~Rhodes, W.~Alhazzani, M.~Antonelli, C.~M. Coopersmith, C.~French,
 J.~Peng and R.~J. Williams, ``Incremental multi-step q-learning,''
   \emph{Machine Learning}, vol.~22, no. 1--3, pp. 283--290, 1996.
 
-\bibitem{singer2016sepsis3}
-M.~Singer, C.~S. Deutschman, C.~W. Seymour, M.~Shankar-Hari, D.~Annane,
-  M.~Bauer, R.~Bellomo, G.~R. Bernard, J.-D. Chiche, C.~M. Coopersmith
-  \emph{et~al.}, ``The third international consensus definitions for sepsis and
-  septic shock (sepsis-3),'' \emph{JAMA}, vol. 315, no.~8, pp. 801--810, 2016.
+\bibitem{mimiciv}
+A.~E.~W. Johnson, L.~Bulgarelli, L.~Shen, A.~Gayles, A.~Shammout, S.~Horng,
+  T.~J. Pollard, S.~Hao, B.~Moody, B.~Gow \emph{et~al.}, ``Mimic-iv, a freely
+  accessible electronic health record dataset,'' \emph{Scientific Data},
+  vol.~10, no.~1, p.~1, 2023.
 
 \bibitem{sutton2018rl}
 R.~S. Sutton and A.~G. Barto, \emph{Reinforcement Learning: An Introduction},
@@ -95,6 +87,16 @@ S.~Liu, K.~C. See, K.~Y. Ngiam, L.~A. Celi, X.~Sun, and M.~Feng,
   ``Reinforcement learning for clinical decision support in critical care:
   Comprehensive review,'' \emph{Journal of Medical Internet Research}, vol.~22,
   no.~7, p. e18477, 2020.
+
+\bibitem{iql}
+I.~Kostrikov, A.~Nair, and S.~Levine, ``Offline reinforcement learning with
+  implicit q-learning,'' in \emph{International Conference on Learning
+  Representations}, 2022.
+
+\bibitem{cql}
+A.~Kumar, A.~Zhou, G.~Tucker, and S.~Levine, ``Conservative q-learning for
+  offline reinforcement learning,'' in \emph{Advances in Neural Information
+  Processing Systems}, 2020.
 
 \bibitem{precup2000offpolicy}
 D.~Precup, R.~S. Sutton, and S.~P. Singh, ``Eligibility traces for off-policy

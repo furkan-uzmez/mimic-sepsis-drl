@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex iql_final_ieee_report"] 1780221402.92366 "iql_final_ieee_report.aux" "iql_final_ieee_report.bbl" "iql_final_ieee_report" 1780221404.08909 0
+["bibtex iql_final_ieee_report"] 1780227570.11689 "iql_final_ieee_report.aux" "iql_final_ieee_report.bbl" "iql_final_ieee_report" 1780229609.98248 0
   "./references.bib" 1780182152.10588 6362 e73f318bfecc3db9a42e79974c3170f9 ""
   "/usr/share/texlive/texmf-dist/bibtex/bst/ieeetran/IEEEtran.bst" 1440712899 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "iql_final_ieee_report.aux" 1780221403.94505 10844 e1197ac2b5f7b1e2682b0ce8167ca497 "pdflatex"
+  "iql_final_ieee_report.aux" 1780229609.8542 10432 7c12fdefff8fa9d7fa15f9f3676cbbe8 "pdflatex"
   (generated)
   "iql_final_ieee_report.bbl"
   "iql_final_ieee_report.blg"
   (rewritten before read)
-["pdflatex"] 1780221402.96803 "iql_final_ieee_report.tex" "iql_final_ieee_report.pdf" "iql_final_ieee_report" 1780221404.08923 0
+["pdflatex"] 1780229608.80828 "iql_final_ieee_report.tex" "iql_final_ieee_report.pdf" "iql_final_ieee_report" 1780229609.9826 0
   "/etc/texmf/web2c/texmf.cnf" 1765102295.13848 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -53,7 +53,6 @@
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb" 1248133631 32726 0a1aea6fcd6468ee2cf64d891f5c43c8 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb" 1248133631 33993 9b89b85fd2d9df0482bd47194d1d3bf3 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1248133631 32569 5e5ddc8df908dea60932f3c484a54c0d ""
-  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb" 1248133631 32915 7bf7720c61a5b3a7ff25b0964421c9b6 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb" 1248133631 32587 1788b0c1c5b39540c96f5e42ccd6dae8 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb" 1248133631 32716 08e384dc442464e7285e891af9f45947 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb" 1248133631 32626 4f5c1b83753b1dd3a97d1b399a005b4b ""
@@ -124,9 +123,9 @@
   "figures/pareto_frontier.png" 1780178294.70077 142033 f8d95bf549843330555df8c5a02a1e03 ""
   "figures/seed_variance.png" 1780157546.63387 50354 0ce192a175c39eb57821fb2e7d548ce2 ""
   "figures/subgroup_safety.png" 1780178294.69677 36016 ed918bec6c263d45955b6e0fc0620a0b ""
-  "iql_final_ieee_report.aux" 1780221403.94505 10844 e1197ac2b5f7b1e2682b0ce8167ca497 "pdflatex"
-  "iql_final_ieee_report.bbl" 1780221402.96104 4539 f50bf7a66d24e2107802567a1c842226 "bibtex iql_final_ieee_report"
-  "iql_final_ieee_report.tex" 1780221396.72095 49595 0608b83f691ff6dc3dddb0b476951a1d ""
+  "iql_final_ieee_report.aux" 1780229609.8542 10432 7c12fdefff8fa9d7fa15f9f3676cbbe8 "pdflatex"
+  "iql_final_ieee_report.bbl" 1780229160.13949 4687 2069acf3811cb2abd19d67b6f0fd386f "bibtex iql_final_ieee_report"
+  "iql_final_ieee_report.tex" 1780229599.89406 44956 b7fa310572f65cb820afbdf4a974169a ""
   (generated)
   "iql_final_ieee_report.aux"
   "iql_final_ieee_report.log"

@@ -15,7 +15,6 @@
 \usepackage{array}
 \usepackage{url}
 
-% Source draft: research/AI AROMA ELIMINATION FOR IEEE PAPER.md
 \begin{document}
 
 \title{Destek Sınırlı Klinik Koşullar Altında Sepsis Dozaj Politikaları İçin Orkestre Edilmiş Bir Offline Reinforcement Learning İş Akışı}
@@ -28,31 +27,28 @@
 \maketitle
 
 \begin{abstract}
-Bu çalışma, MIMIC-IV veri seti üzerinde sepsis dozaj politikalarının yeniden üretilebilir biçimde değerlendirilmesi için orkestre edilmiş bir Offline Reinforcement Learning (çevrimdışı pekiştirmeli öğrenme) iş akışı sunmaktadır. Temel risk, modelin tarihsel veride zayıf temsil edilen sıvı-vazopresör kombinasyonlarını güvenilir sanmasıdır. Bu nedenle iş akışı; Sepsis-3 kohort seçimini, 72 saatlik klinik pencereyi, 62 boyutlu durum vektörünü, $5\times5$ ayrık aksiyon uzayını, seyrek ödül (sparse reward) ve SOFA-biçimli ödül (SOFA-shaped reward) tasarımlarını, yalnız eğitim verisine dayalı ön işleme (train-only preprocessing), hasta düzeyi bölme (patient-level split), Implicit Q-Learning (IQL, örtük Q-öğrenme) sweep'ini, çok kriterli finalist seçimini ve multi-seed doğrulamasını aynı protokol içinde tutar. Aşama 1'de iki ödül, üç öğrenme oranı (learning rate) rejimi ve üç expectile--temperature ayarından oluşan 18 konfigürasyon değerlendirilir; Aşama 2'de altı finalist üç seed ile yeniden ölçülür. Final aday `iql\_sofa\_shaped\_conservative\_safe' konfigürasyonudur. Üç seed ortalamasında Fitted Q Evaluation (FQE, öğrenilmiş Q-fonksiyonu üzerinden yapılan politika değerlendirmesi) = 2.848, Weighted Importance Sampling (WIS, ağırlıklı önem örneklemesi) = 8.203, bootstrap WIS 95\% confidence interval (CI) = 4.963--10.817, Effective Sample Size (ESS, etkin örneklem büyüklüğü) = 29.410, behavior support mass = 0.991 ve clinician exact-bin agreement = 0.414 elde edilmiştir. ESS değeri 50 eşiğinin altında kaldığı için bu sonuç klinik üstünlük iddiası değil, destek sınırı açıkça belirtilmiş retrospektif Off-Policy Evaluation (OPE, politika dışı değerlendirme) kanıtıdır.
+Bu çalışma, MIMIC-IV veri seti üzerinde sepsis dozaj politikalarının yeniden üretilebilir biçimde değerlendirilmesi için orkestre edilmiş bir Offline Reinforcement Learning (çevrimdışı pekiştirmeli öğrenme) iş akışı sunmaktadır. Temel risk, modelin tarihsel veride zayıf temsil edilen sıvı-vazopresör kombinasyonlarını güvenilir sanmasıdır. Bu nedenle iş akışı; Sepsis-3 kohort seçimini, 72 saatlik klinik pencereyi, 62 boyutlu durum vektörünü, $5\times5$ ayrık aksiyon uzayını, seyrek ödül ve SOFA-biçimli ödül tasarımlarını, yalnız eğitim verisine dayalı ön işleme, hasta düzeyi bölme, Implicit Q-Learning (IQL) hiperparametre taramasını, çok kriterli finalist seçimini ve multi-seed doğrulamasını aynı protokol içinde tutar. Aşama 1'de iki ödül, üç öğrenme oranı (learning rate) rejimi ve üç expectile--temperature ayarından oluşan 18 konfigürasyon değerlendirilir; Aşama 2'de altı finalist üç seed ile yeniden ölçülür. Final aday, SOFA-biçimli ödül, konservatif öğrenme oranı ve güvenli IQL ayarına sahip final modeldir. Üç seed ortalamasında FQE = 2.848, WIS = 8.203, bootstrap WIS 95\% CI = 4.963--10.817, ESS = 29.410, behavior support mass = 0.991 ve clinician exact-bin agreement = 0.414 elde edilmiştir. ESS değeri 50 eşiğinin altında kaldığı için bu sonuç klinik üstünlük iddiası değil, destek sınırı açıkça belirtilmiş retrospektif OPE kanıtıdır.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Offline Reinforcement Learning, Implicit Q-Learning (IQL), sepsis, MIMIC-IV, Off-Policy Evaluation (OPE), yeniden üretilebilirlik, klinik karar desteği
+Offline Reinforcement Learning, Implicit Q-Learning (IQL), sepsis, MIMIC-IV, OPE, yeniden üretilebilirlik, klinik karar desteği
 \end{IEEEkeywords}
 
 \section{Giriş}
-Sepsis resüsitasyonunda aynı hasta birkaç saat içinde farklı sıvı ve vazopresör dozlarına ihtiyaç duyabilir. Bu kararlar gecikmeli mortalite sonuçlarına bağlanır ve daha hasta bireylerin daha agresif tedavi alması karıştırıcılık (confounding) üretir. Offline Reinforcement Learning (Offline RL) bu nedenle uygundur: model yalnızca geçmiş yoğun bakım yörüngelerini (trajectories) kullanır, hastalar üzerinde çevrimiçi keşif (online exploration) yapmaz. Aynı özellik yöntemi kırılgan da yapar; politika desteklenmeyen aksiyonlara kayarsa, FQE veya WIS gibi off-policy tahminleyiciler (off-policy estimators) sayısal olarak düzgün görünse bile klinik olarak güvenilmez hale gelir \cite{levine2020offline,voloshin2021ope}.
+Sepsis, enfeksiyona karşı gelişen bağışıklık ve fizyolojik yanıtın kontrolsüzleşerek yaşamı tehdit eden organ disfonksiyonuna yol açtığı ciddi bir klinik sendromdur \cite{singer2016sepsis3}. Basit bir enfeksiyon tablosundan farklı olarak, konak yanıtının kontrolsüzleşmesi hastanın kendi doku ve organlarına zarar verebilir; klinik süreç septik şoka, çoklu organ yetmezliğine ve ölümle sonuçlanabilecek hızlı fizyolojik bozulmaya ilerleyebilir. Küresel Hastalık Yükü analizine göre 2017 yılında dünya genelinde yaklaşık 48.9 milyon sepsis olgusu ve 11 milyon sepsis ilişkili ölüm bildirilmiştir; bu ölümler tüm küresel ölümlerin yaklaşık beşte birine karşılık gelmektedir \cite{who2020sepsis}. Bu nedenle sepsis, özellikle yoğun bakım ünitesinde sürekli izlem, zamanında müdahale ve ardışık tedavi kararları gerektiren yüksek riskli bir klinik karar problemi olarak ele alınmaktadır.
 
-Önerilen iş akışı, yatak başı gerçek zamanlı bir tedavi modülü sunmaktan ziyade, retrospektif politika değerlendirmesi ve model karşılaştırmaları için metodolojik olarak izole edilmiş bir analiz ortamı teşkil eder. Model sınıfı modelsiz (model-free), off-policy ve offline RL'dir. Conservative Q-Learning (CQL), Batch-Constrained Q-Learning (BCQ) ve Implicit Q-Learning (IQL) aileleri tasarım aşamasında değerlendirilmiştir \cite{cql,bcq,iql}. Final rapor IQL'ye odaklanır; çünkü IQL veri dışı aksiyon maksimumu almadan politika çıkarır. Kodun MPS ve CUDA üzerinde aynı eğitim mantığıyla çalışması istenir; hardware-agnostic execution layer (donanımdan bağımsız yürütme katmanı) sayesinde donanım farkı deney kararına dönüşmemelidir.
+Yoğun bakımda sepsis resüsitasyonu, hastanın fizyolojik durumuna bağlı olarak kısa zaman aralıklarında değişen sıvı ve vazopresör kararlarını içerir. Aynı hasta birkaç saat içinde farklı doz gereksinimleri gösterebilir; bu kararların etkisi ise çoğu zaman yalnızca anlık ölçümlerde değil, gecikmeli mortalite ve organ disfonksiyonu sonuçlarında gözlenir. Ayrıca daha ağır hastaların daha agresif tedavi alması, gözlemsel yoğun bakım verilerinde belirgin karıştırıcılık üretir. Bu yapı, problemi yalnızca gözetimli öğrenme ile ``doğru doz tahmini'' olarak değil, ardışık karar verme ve politika değerlendirme problemi olarak formüle etmeyi gerektirir.
 
-Klinik zaman çizelgesi dört saatlik karar pencerelerine ayrılır; her karar, vazopresör ve intravenöz sıvı şiddetinin $5\times5$ kombinasyonlarından biridir. Final deney iki ödül varyantını aynı terminal değerlendirme altında karşılaştırır, finalistleri yalnız doğrulama kanıtıyla seçer ve raporlanabilir çıktı paketi (artifact bundle) üretir. Denetim kapıları, deterministik grid expansion (ızgara genişletmesi), multi-seed birleştirmesi ve grafik raporlama bu nedenle yardımcı ayrıntı değil, sonucun geçerlilik koşuludur.
+Offline Reinforcement Learning bu bağlamda uygun bir çerçeve sunar; çünkü politika öğrenimi yalnızca geçmiş yoğun bakım yörüngeleri üzerinden yapılır ve hastalar üzerinde çevrimiçi keşif gerektirmez \cite{levine2020offline}. Ancak bu avantaj aynı zamanda temel güvenilirlik sorununu doğurur: öğrenilen politika, tarihsel veride yeterince temsil edilmeyen sıvı--vazopresör kombinasyonlarına kayarsa, modelin değer tahminleri klinik olarak güvenilir olmayabilir. Bu nedenle FQE, WIS, ESS ve davranış desteği analizleri, bu çalışmada yalnızca yardımcı metrikler değil, politika yorumlanabilirliğinin temel güvenlik koşulları olarak ele alınmaktadır \cite{voloshin2021ope}.
 
 \section{İlgili Çalışmalar}
-Offline Reinforcement Learning, politika öğrenimini sabit bir veri kümesinin davranış desteği içinde tutmaya çalışır. IQL bu amaçla veri dışı aksiyonları maksimize etmez; expectile değer öğrenimi (expectile value learning) ve avantaj ağırlıklı Behavior Cloning (BC, davranış klonlama) kullanır \cite{iql}. CQL ise low-support action'ların Q değerini açıkça cezalandırır \cite{cql}. Bu ceza ekstrapolasyon hatası (extrapolation error) riskine karşı güçlüdür, fakat yanlış ayarlandığında klinikte nadir ama gerekli kurtarma müdahalelerini de bastırabilir. IQL'nin tercih edilmesi bu yüzden bilinçli bir takastır: destek dışına taşma azalır, ancak veri dağılımında hiç görülmeyen tedavi stratejileri keşfedilemez.
+Sepsis için pekiştirmeli öğrenme literatürü, AI Clinician ve Raghu ve arkadaşlarının çalışmalarıyla önemli ölçüde şekillenmiştir. Bu çalışmalar, yoğun bakım verilerinden tedavi politikası öğrenmenin potansiyelini gösterirken çevrim dışı değerlendirme, davranış politikasından sapma ve klinik güvenlik gereksinimlerini de bu alanın temel tasarım ölçütleri hâline getirmiştir. AI Clinician, yoğun bakım sepsis hastalarında IV sıvı ve vazopresör dozlarını ayrık tedavi binleri olarak modellemiş ve bu iki tedavi ekseninden oluşan ayrık aksiyon uzayı üzerinden politika öğrenimi gerçekleştirmiştir \cite{komorowski2018ai}. Bu yaklaşım, sepsis resüsitasyonunun ardışık karar verme problemi olarak modellenebileceğini göstermesi bakımından yol açıcıdır. Raghu ve arkadaşları ise aynı problemi daha sürekli durum temsilleri ve deep reinforcement learning çizgisinde ele alarak, hasta fizyolojisinin kaba ayrık kümelere zorlanmasının oluşturabileceği bilgi kaybına dikkat çekmiştir \cite{raghu2017sepsis}. Bu iki çalışma, bu rapordaki 4 saatlik karar adımı, sürekli klinik durum vektörü ve sıvı-vazopresör temelli $5\times5$ aksiyon grid'i için temel literatür zeminini oluşturur.
 
-Sepsis RL literatüründe iki çalışma bu tasarımı doğrudan çerçeveler. AI Clinician, sıvı ve vazopresör dozlarını ayrık tedavi binleri (bins) olarak modellemiştir; Raghu ve arkadaşları aynı problemi sürekli durum temsilleriyle ele almıştır \cite{komorowski2018ai,raghu2017sepsis}. Bu çalışmalar klinik karar desteği için yol açıcı olsa da, sağlıkta RL rehberleri gözlemsel politikaların confounding, destek eksikliği, estimator varyansı ve prospektif doğrulama eksikliği nedeniyle tedavi önerisi sayılamayacağını belirtir \cite{gottesman2019guidelines}. Bu rapor bu sınırı korur: amaç klinik üstünlük iddiası değil, yeniden üretilebilir offline evaluation kanıtıdır. Veri kaynağı kimliksizleştirilmiş (de-identified) kritik bakım kayıtları sunan MIMIC-IV'tür \cite{mimiciv}; aksiyon eksenlerinin sıvı ve vazopresör olarak seçilmesi güncel sepsis yönetiminde bu iki müdahalenin merkezi rolüyle uyumludur \cite{evans2021ssc}.
+Bununla birlikte, sağlıkta RL çalışmaları gözlemsel veri üzerinden öğrenildiği için doğrudan klinik tedavi önerisi olarak yorumlanamaz. Daha ağır hastaların daha agresif tedavi alması confounding by indication riskini doğurur; destek eksikliği modelin az gözlenen aksiyonlarda güvenilmez değer tahmini üretmesine neden olabilir; WIS gibi OPE estimator'ları az sayıda yüksek ağırlıklı yörüngeden etkilenebilir; ayrıca retrospektif doğrulama prospektif klinik etkinlik kanıtı yerine geçmez \cite{gottesman2019guidelines}. Bu nedenle bu raporun amacı, IQL politikasının klinik olarak üstün olduğunu iddia etmek değil, MIMIC-IV üzerinde sızıntısız veri bölme, davranış desteği analizi, FQE, WIS, ESS ve bootstrap güven aralıkları ile yeniden üretilebilir bir offline evaluation protokolü sunmaktır \cite{voloshin2021ope}. Aksiyon eksenlerinin IV sıvı ve vazopresör olarak seçilmesi ise güncel sepsis yönetiminde bu iki müdahalenin hemodinamik resüsitasyonun merkezinde yer almasıyla uyumludur \cite{evans2021ssc}.
 
 \section{Kuramsal Arka Plan ve Algoritmik Konumlandırma}
-Offline RL kapsamında politika iyileştirmesi, veri desteği dışına taşmadığı sürece anlamlıdır. Klasik off-policy değer öğrenimi (off-policy value learning) bir sonraki durumda $\max_{a'} Q(s',a')$ sorgusu yaptığında, veri setinde hiç görülmemiş aksiyonlara değer atar. Fonksiyon yaklaştırıcı bu bölgelerde eğitim sinyali almadığı için ekstrapolasyon hatası oluşur; hata Bellman yedeklemeleriyle büyür ve klinik veride güvenilmez doz önerilerine dönüşebilir.
 
-Literatürde bu hataya verilen yanıtlar üç grupta toplanabilir. CQL gibi açık aksiyon-uzayı düzenlileştirmesi (explicit action-space regularization) yöntemleri veri dışı aksiyonların Q değerini düşürür ve kötümser bir alt sınır kurar \cite{cql}. IQL gibi in-sample (veri-içi) yöntemler gözlenmemiş aksiyonu sorgulamaz; veri içinde yüksek değerli görünen aksiyonların üst expectile değerini (expectile) öğrenir \cite{iql}. Durum-uzayı manifoldu düzenlileştirmesi (state-space manifold regularization) ise cezayı aksiyonlardan durum manifoldunun dışına taşır. Bu çalışmada IQL hattı seçilmiştir; çünkü ek ceza katsayısı kalibrasyonundan önce destek içinde kalma ve yorumlanabilir doğrulama protokolü temel öncelik olarak belirlenmiştir.
-
-Çok adımlı değer yayılımı (multi-step value propagation) bu çalışmanın doğrudan deney değişkeni değil, sonraki araştırma eksenidir. Tek adımlı yedeklemeler seyrek terminal mortalite (sparse terminal mortality) sinyalini 18 adımlık yörünge (trajectory) boyunca yavaş taşır; Peng'in $Q(\lambda)$ gibi uygunluk izi (eligibility trace) yaklaşımları bu gecikmeyi azaltabilir \cite{peng1996qlambda}. Bu raporda önce destek güvenliği ve sızıntısız değerlendirme (leakage-free evaluation) sabitlenmiştir. Multi-step operatör aynı anda değiştirilseydi, final IQL sonucunun reward/LR/expectile seçimi mi yoksa yedekleme operatörü mü nedeniyle değiştiği ayrıştırılamazdı.
+Çok adımlı değer yayılımı bu çalışmanın doğrudan deney değişkeni değil, sonraki araştırma eksenidir. Tek adımlı yedeklemeler seyrek terminal mortalite sinyalini 18 adımlık yörünge boyunca yavaş taşır; Peng'in $Q(\lambda)$ gibi uygunluk izi yaklaşımları bu gecikmeyi azaltabilir \cite{peng1996qlambda}. Bu raporda önce destek güvenliği ve sızıntısız değerlendirme sabitlenmiştir. Multi-step operatör aynı anda değiştirilseydi, final IQL sonucunun reward/LR/expectile seçimi mi yoksa yedekleme operatörü mü nedeniyle değiştiği ayrıştırılamazdı.
 
 \section{Uçtan Uca Proje Mimarisi}
 Proje, katı bağımlılık zinciriyle ilerleyen on ana adımdan oluşur. Bu yapı, veri hazırlama hatalarının final politika değerlendirmesine taşınmasını engellemek için bilinçli olarak aşamalı tasarlanmıştır.
@@ -65,56 +61,56 @@ Proje, katı bağımlılık zinciriyle ilerleyen on ana adımdan oluşur. Bu yap
 \toprule
 Adım & Bileşen & İçerik \\
 \midrule
-1 & Kohort seçimi & MIMIC-IV içinden Sepsis-3 kriterlerine uyan yetişkin yoğun bakım ünitesi (ICU) hastalarının seçilmesi; geçersiz onset, kısa yoğun bakım ünitesi kalışı, eksik temel demografi ve tekrar yatışların yönetilmesi. \\
-2 & Zaman çizelgesi & Sepsis onset'inden 24 saat önce başlayıp 48 saat sonrasına uzanan 72 saatlik pencerenin 4 saatlik karar adımlarına bölünmesi. \\
-3 & Sıfır sızıntı (zero leakage) bölme (split) & Hastaların eğitim/doğrulama/test (train/validation/test) olarak hasta-düzeyinde ayrılması ve ön işleme uyarlama işlemlerinin (preprocessing fit) yalnız eğitim verisi (train) üzerinde yapılması. \\
-4 & Durum (state) çıkarımı & Yaşamsal bulgu (vital), laboratuvar, tedavi geçmişi, demografi, eksiklik (missingness) ve türetilmiş değişkenlerden 62 boyutlu durum vektörü üretilmesi. \\
-5 & Aksiyon/ödül (action/reward) & Vazopresör ve IV sıvı dozlarının 25 ayrık aksiyona dönüştürülmesi; seyrek ve SOFA-biçimli ödüllerin (sparse and SOFA-shaped rewards) üretilmesi. \\
+1 & Kohort seçimi & MIMIC-IV içinden Sepsis-3 kriterlerine uyan yetişkin yoğun bakım ünitesi hastalarının seçilmesi; geçersiz sepsis başlangıç zamanı, kısa yoğun bakım ünitesi kalışı, eksik temel demografi ve tekrar yatışların yönetilmesi. \\
+2 & Zaman çizelgesi & Sepsis başlangıç zamanından 24 saat önce başlayıp 48 saat sonrasına uzanan 72 saatlik pencerenin 4 saatlik karar adımlarına bölünmesi. \\
+3 & Sıfır sızıntı bölme & Hastaların eğitim/doğrulama/test olarak hasta-düzeyinde ayrılması ve ön işleme uyarlama işlemlerinin yalnız eğitim verisi üzerinde yapılması. \\
+4 & Durum çıkarımı & Yaşamsal bulgu, laboratuvar, tedavi geçmişi, demografi, eksiklik ve türetilmiş değişkenlerden 62 boyutlu durum vektörü üretilmesi. \\
+5 & Aksiyon/ödül & Vazopresör ve IV sıvı dozlarının 25 ayrık aksiyona dönüştürülmesi; seyrek ve SOFA-biçimli ödüllerin üretilmesi. \\
 6 & Geçiş/baseline & replay dataset'in $(s_t,a_t,r_t,s_{t+1},done_t)$ formatında oluşturulması; clinician replay, no-treatment ve Behavior Cloning (BC) baselines kurulması. \\
-7--8 & IQL eğitimi & Offline data üzerinde destek dışına çıkmadan expectile değer öğrenimi ve avantaj ağırlıklı aktör güncellemesi (advantage-weighted actor update) ile IQL politikalarının eğitilmesi. \\
-9 & OPE ve güvenlik & FQE, WIS, ESS, bootstrap confidence interval (CI), behavior support mass, clinician agreement, heatmap ve safety diagnostics hesaplanması. \\
-10 & Final sweep & 18 konfigürasyonlu IQL sweep'i, finalist seçimi, multi-seed doğrulaması ve IEEE rapor çıktılarının (artifacts) üretilmesi. \\
+7--8 & IQL eğitimi & Offline data üzerinde destek dışına çıkmadan expectile değer öğrenimi ve avantaj ağırlıklı aktör güncellemesi ile IQL politikalarının eğitilmesi. \\
+9 & OPE ve güvenlik & FQE, WIS, ESS, bootstrap CI, behavior support mass, clinician agreement, heatmap ve safety diagnostics hesaplanması. \\
+10 & Nihai deney taraması & 18 konfigürasyonlu IQL hiperparametre taraması, finalist seçimi ve multi-seed doğrulaması. \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-Bu mimari tek bir eğitim betiği (training script) olarak değil, veri hazırlama, model eğitimi, değerlendirme ve raporlama katmanlarını birbirine bağlayan deney protokolü olarak ele alınır. Kohort tanımı, veri sözleşmesi, model eğitimi, Off-Policy Evaluation (OPE), güvenlik analizi ve raporlama çıktıları aynı deney protokolüne bağlanır. Bu bağlantı, bölme sızıntısı (split leakage), farklı ön işleme (preprocessing) veya hatalı transition indexing kaynaklı yapay performans artışlarının model başarısı olarak yorumlanmasını engeller.
+Bu mimari tek bir eğitim betiği olarak değil, veri hazırlama, model eğitimi, değerlendirme ve raporlama katmanlarını birbirine bağlayan deney protokolü olarak ele alınır. Kohort tanımı, veri sözleşmesi, model eğitimi, OPE, güvenlik analizi ve raporlama çıktıları aynı deney protokolüne bağlanır. Bu bağlantı, bölme sızıntısı, farklı ön işleme veya hatalı transition indexing kaynaklı yapay performans artışlarının model başarısı olarak yorumlanmasını engeller.
 
 \section{Kohort, Zaman ve Split Tasarımı}
 \subsection{Kohort Seçimi}
 Kohort MIMIC-IV üzerinde Sepsis-3 kriterlerine göre oluşturulur \cite{singer2016sepsis3,mimiciv}. Dahil edilen popülasyon 18 yaş ve üzeri yetişkin, doğrudan yoğun bakım ünitesi izlemine sahip ve sepsis tanımıyla uyumlu hastalardır. Çocuk hastalar farklı doz ve fizyoloji rejimlerine sahip oldukları için dışarıda bırakılır; bu karar verilmeseydi model tek bir aksiyon-doz anlamını heterojen yaş grupları için öğrenmeye zorlanırdı. Yoğun bakım ünitesi dışı veya yoğun gözlem verisi olmayan hastalar da dışlanır; çünkü 4 saatlik karar pencereleri için yeterli fizyolojik zaman serisi kurulamaz.
 
-Dışlama kuralları, karar penceresinin klinik ve zamansal tutarlılığını korumak amacıyla uygulanır. Sepsis onset zamanı bulunamayan hastalar, 4 saatten kısa yoğun bakım ünitesi kalışı olanlar ve yaş/cinsiyet gibi temel demografisi eksik olanlar çıkarılır. Tekrar yatan hastalarda yalnız ilk yatış kullanılır. Aynı hastanın bir yatışı eğitim setine (train set), sonraki yatışı test setine düşerse model kronik profili dolaylı olarak ezberleyebilir; bu nedenle filtreleme sonucu ve dışlanan hasta sayıları denetim çıktılarında (audit artifacts) saklanır.
+Dışlama kuralları, karar penceresinin klinik ve zamansal tutarlılığını korumak amacıyla uygulanır. Sepsis başlangıç zamanı bulunamayan hastalar, 4 saatten kısa yoğun bakım ünitesi kalışı olanlar ve yaş/cinsiyet gibi temel demografisi eksik olanlar çıkarılır. Tekrar yatan hastalarda yalnız ilk yatış kullanılır. Aynı hastanın bir yatışı eğitim setine, sonraki yatışı test setine düşerse model kronik profili dolaylı olarak ezberleyebilir; bu nedenle filtreleme sonucu ve dışlanan hasta sayıları denetim çıktılarında saklanır.
 
 \subsection{Zaman Çizelgesi}
-Her yoğun bakım ünitesi kalışı için `sepsis\_onset\_time' hesaplanır. Analiz penceresi onset'ten 24 saat önce başlayıp 48 saat sonrasına kadar devam eder. Bu 72 saatlik pencere 4 saatlik karar adımlarına ayrıldığında tipik epizot (episode) yaklaşık 18 zaman adımı (timestep) içerir. Dört saatlik pencere, literatürdeki sepsis RL kurulumlarıyla karşılaştırılabilirlik sağlar ve klinik ölçümlerin düzensiz zamanlanmasını yönetilebilir bir karar frekansına indirger \cite{komorowski2018ai,raghu2017sepsis}. Daha kısa pencere seçilseydi ölçüm eksikliği ve gürültülü aksiyon tekrarları artacak, davranış politikası olasılıkları daha seyrek gözlenen mikro kararlar üzerinde tahmin edilecekti. Daha uzun pencere seçilseydi de sıvı ve vazopresör değişimlerinin akut fizyolojik etkileri ortalamaya karışacak, ardışık karar yapısı zayıflayacaktı.
+Her yoğun bakım ünitesi kalışı için sepsis başlangıç zamanı hesaplanır. Analiz penceresi sepsis başlangıç zamanından 24 saat önce başlayıp 48 saat sonrasına kadar devam eder. Bu 72 saatlik pencere 4 saatlik karar adımlarına ayrıldığında tipik epizot yaklaşık 18 zaman adımı içerir. Dört saatlik pencere, literatürdeki sepsis RL kurulumlarıyla karşılaştırılabilirlik sağlar ve klinik ölçümlerin düzensiz zamanlanmasını yönetilebilir bir karar frekansına indirger \cite{komorowski2018ai,raghu2017sepsis}. Daha kısa pencere seçilseydi ölçüm eksikliği ve gürültülü aksiyon tekrarları artacak, davranış politikası olasılıkları daha seyrek gözlenen mikro kararlar üzerinde tahmin edilecekti. Daha uzun pencere seçilseydi de sıvı ve vazopresör değişimlerinin akut fizyolojik etkileri ortalamaya karışacak, ardışık karar yapısı zayıflayacaktı.
 
 \subsection{Split Stratejisi}
-Varsayılan split hasta düzeyinde eğitim \%70, doğrulama \%15 ve test \%15 olarak yapılır. Bölme seed'i (split seed) 42 olarak sabitlenir. Eğitim, doğrulama ve test özne kümelerinin (subject sets) kesişimi boş olmalıdır. Test seti yalnız final raporlama için kullanılır; hiperparametre (hyperparameter), kontrol noktası (checkpoint) veya metrik tasarımı test sonucuna göre değiştirilmez. Bu kural ihlal edilseydi final test metrikleri gerçek ayrılmış (held-out) kanıt olmaktan çıkar, doğrulamanın uzantısı haline gelirdi.
+Varsayılan split hasta düzeyinde eğitim \%70, doğrulama \%15 ve test \%15 olarak yapılır. Bölme seed'i 42 olarak sabitlenir. Eğitim, doğrulama ve test özne kümelerinin kesişimi boş olmalıdır. Test seti yalnız final raporlama için kullanılır; hiperparametre, kontrol noktası veya metrik tasarımı test sonucuna göre değiştirilmez. Bu kural ihlal edilseydi final test metrikleri gerçek ayrılmış kanıt olmaktan çıkar, doğrulamanın uzantısı haline gelirdi.
 
 \section{MDP Formülasyonu}
-Problem sonlu ufuklu bir Markov karar süreci olarak modellenir \cite{sutton2018rl}:
+Sepsis resüsitasyonu ardışık karar yapısına sahip olduğu için her 4 saatlik pencere bir karar adımı olarak ele alınır. Bu kurulumda mevcut klinik durum state, sıvı-vazopresör kombinasyonu action, sonraki fizyolojik değişim ve terminal sonuç ise reward sinyaliyle ilişkilendirilir. Bu nedenle problem sonlu ufuklu bir Markov karar süreci olarak modellenir \cite{sutton2018rl}:
 \begin{equation}
 M=(S,A,P,R,\gamma).
 \end{equation}
-Burada $S$ hasta durum uzayını, $A$ ayrık tedavi aksiyonlarını, $P$ geçiş dinamiklerini, $R$ ödül fonksiyonunu ve $\gamma$ iskonto faktörünü (discount factor) temsil eder. Her geçiş şu biçimdedir:
+Burada $S$ hasta durum uzayını, $A$ ayrık tedavi aksiyonlarını, $P$ geçiş dinamiklerini, $R$ ödül fonksiyonunu ve $\gamma$ iskonto faktörünü temsil eder. Her geçiş şu biçimdedir:
 \begin{equation}
 (s_t,a_t,r_t,s_{t+1},done_t).
 \end{equation}
 
 \subsection{Durum Temsili}
-Durum vektörü (state vector) hastanın o andaki klinik durumunu özetleyen 62 sürekli/ikili özellikten oluşur. Başlıca gruplar kalp hızı, MAP, sistolik/diyastolik tansiyon, solunum ve SpO2 gibi yaşamsal bulgular (vital signs); kan gazı, elektrolit, renal, hepatik, koagülasyon ve hemogram laboratuvarları; kümülatif sıvı, vazopresör maruziyeti ve idrar çıkışı gibi tedavi sinyalleri; yaş ve cinsiyet gibi demografik değişkenler; PaO2/FiO2, shock index ve onset sonrası saat gibi türetilmiş değişkenlerdir.
+Durum vektörü hastanın o andaki klinik durumunu özetleyen 62 sürekli/ikili özellikten oluşur. Başlıca gruplar kalp hızı, MAP, sistolik/diyastolik tansiyon, solunum ve SpO2 gibi yaşamsal bulgular; kan gazı, elektrolit, renal, hepatik, koagülasyon ve hemogram laboratuvarları; kümülatif sıvı, vazopresör maruziyeti ve idrar çıkışı gibi tedavi sinyalleri; yaş ve cinsiyet gibi demografik değişkenler; PaO2/FiO2, shock index ve sepsis başlangıcı sonrası saat gibi türetilmiş değişkenlerdir.
 
 Her 4 saatlik pencerede birden fazla ölçüm varsa özelliğe göre `last', `mean', `min', `max', `sum' veya `cumulative' agregasyon kuralı uygulanır. Örneğin bazı yaşamsal bulgularda son ölçüm klinik karar anına daha yakın bilgi taşırken, toplam sıvı veya kümülatif vazopresör maruziyeti pencere içi tedavi yükünü temsil eder. Tek bir agregasyon kuralı tüm değişkenlere dayatılsaydı klinik anlamı farklı sinyaller aynı istatistiksel kalıba sıkıştırılmış olurdu.
 
-Eksik veriler için sıralı strateji uygulanır: epizot içinde forward-fill, eğitim bölmesi (train split) üzerinden hesaplanan medyan, klinik normal değer fallback ve gerekli durumda eksiklik göstergesi (missingness flag). Missingness göstergeleri eklenmeseydi model, ölçülmeyen laboratuvarı normal değerle karıştırabilir ve hekimin ölçüm kararıyla taşınan risk bilgisini kaybedebilirdi. Yalnız eğitim medyanı (train-only median) kullanılmasaydı doğrulama/test dağılım bilgisi ön işleme üzerinden eğitime sızardı.
+Eksik veriler için sıralı strateji uygulanır: epizot içinde forward-fill, eğitim bölmesi üzerinden hesaplanan medyan, klinik normal değer fallback ve gerekli durumda eksiklik göstergesi. Missingness göstergeleri eklenmeseydi model, ölçülmeyen laboratuvarı normal değerle karıştırabilir ve hekimin ölçüm kararıyla taşınan risk bilgisini kaybedebilirdi. Yalnız eğitim medyanı kullanılmasaydı doğrulama/test dağılım bilgisi ön işleme üzerinden eğitime sızardı.
 
-\subsection{Aksiyon Uzayı (Action Space)}
+\subsection{Aksiyon Uzayı}
 Aksiyon uzayı 25 ayrık tedavi kararından oluşur. Her aksiyon, vazopresör dozu ve IV sıvı miktarının $5\times5$ kombinasyonudur:
 \begin{equation}
 action\_id = vaso\_bin \times 5 + fluid\_bin.
 \end{equation}
-Bin 0 tedavi yok anlamına gelir; sıfır dışı (non-zero) dozlar eğitim bölmesi üzerindeki çeyrekliklere göre Q1--Q4 olarak ayrılır. Sıfır doz (zero dose) ayrı tutulur, çünkü hiç tedavi vermemek küçük ama sıfır dışı tedaviyle aynı klinik anlamı taşımaz. Bin eşikleri yalnız eğitim bölmesi üzerinde öğrenilir ve doğrulama/test üzerinde dondurulmuş şekilde uygulanır. Eşikler tüm veri üzerinde hesaplansaydı test doz dağılımı aksiyon kodlamasına sızardı.
+Bin 0 tedavi yok anlamına gelir; sıfır dışı dozlar eğitim bölmesi üzerindeki çeyrekliklere göre Q1--Q4 olarak ayrılır. Sıfır doz ayrı tutulur, çünkü hiç tedavi vermemek küçük ama sıfır dışı tedaviyle aynı klinik anlamı taşımaz. Bin eşikleri yalnız eğitim bölmesi üzerinde öğrenilir ve doğrulama/test üzerinde dondurulmuş şekilde uygulanır. Eşikler tüm veri üzerinde hesaplansaydı test doz dağılımı aksiyon kodlamasına sızardı.
 
 \begin{table}[t]
 \centering
@@ -134,29 +130,29 @@ Vasopressor bin & 0 & 1 & 2 & 3 & 4 \\
 \end{tabular}
 \end{table}
 
-\subsection{Ödül Tasarımı (Reward Design)}
-İki ödül varyantı kullanılır. Seyrek ödül yalnız terminal mortalite/sağkalım fayda değerini (utility) kullanır: 90 gün yaşayan hasta için $+15$, 90 gün içinde ölüm için $-15$. Bu seçenek klinik nihai sonucu doğrudan hedeflediği için yorumlanması kolaydır, fakat uzun ufuklu ve seyrek geri bildirimli olduğundan değer öğrenmesi yüksek varyanslı hale gelebilir.
+\subsection{Ödül Tasarımı}
+İki ödül varyantı kullanılır. Seyrek ödül yalnız terminal mortalite/sağkalım fayda değerini kullanır: 90 gün yaşayan hasta için $+15$, 90 gün içinde ölüm için $-15$. Bu seçenek klinik nihai sonucu doğrudan hedeflediği için yorumlanması kolaydır, fakat uzun ufuklu ve seyrek geri bildirimli olduğundan değer öğrenmesi yüksek varyanslı hale gelebilir.
 
-SOFA-biçimli ödül terminal faydayı (terminal utility) korur ve ara adımlarda SOFA değişimine küçük bir şekillendirme sinyali (shaping signal) ekler:
+SOFA-biçimli ödül terminal faydayı korur ve ara adımlarda SOFA değişimine küçük bir şekillendirme sinyali ekler:
 \begin{equation}
 sofa\_shaping = -0.025 \times (SOFA_{current}-SOFA_{previous}).
 \end{equation}
-SOFA artışı kötüleşme olarak negatif, SOFA azalması iyileşme olarak pozitif sinyal üretir. SOFA'nın sepsis organ disfonksiyonu tanımı ve klinik şiddet takibiyle ilişkili olması bu ara sinyali klinik olarak gerekçelendirir \cite{singer2016sepsis3}. SOFA şekillendirmesi (SOFA shaping) kullanılmasaydı eğitim yalnız terminal sonuca dayanacak ve ara fizyolojik iyileşmeleri ayırt etmek zorlaşacaktı. Tersine, shaping ağırlığı çok güçlü seçilseydi ajan mortalite yerine kısa vadeli skor oynamalarını optimize edebilirdi; bu nedenle terminal fayda korunmuş ve seçim ortak terminal değerlendirmeye bağlanmıştır.
+SOFA artışı kötüleşme olarak negatif, SOFA azalması iyileşme olarak pozitif sinyal üretir. SOFA'nın sepsis organ disfonksiyonu tanımı ve klinik şiddet takibiyle ilişkili olması bu ara sinyali klinik olarak gerekçelendirir \cite{singer2016sepsis3}. SOFA şekillendirmesi kullanılmasaydı eğitim yalnız terminal sonuca dayanacak ve ara fizyolojik iyileşmeleri ayırt etmek zorlaşacaktı. Tersine, shaping ağırlığı çok güçlü seçilseydi ajan mortalite yerine kısa vadeli skor oynamalarını optimize edebilirdi; bu nedenle terminal fayda korunmuş ve seçim ortak terminal değerlendirmeye bağlanmıştır.
 
 \subsection{İskonto Faktörü}
 İskonto faktörü $\gamma=0.99$ olarak sabitlenir. Bu seçim, sepsis tedavisinde kısa vadeli hemodinamik kararların uzun vadeli mortalite sonucuyla ilişkili olması nedeniyle uygundur. Daha küçük bir $\gamma$ kısa vadeli SOFA değişimlerini fazla öne çıkarabilir, $\gamma=1$ ise sonlu ufukta mümkün olsa da FQE ve WIS tahminlerinde geç dönem terminal sinyallerine daha hassas bir varyans profili doğurabilirdi.
 
-\section{Ön İşleme ve Sızıntısız Sözleşmeler (Preprocessing and Leakage-Free Contracts)}
-Temel kural `eğitime uydur, her yerde dönüştür (fit on train, transform everywhere)' şeklindedir. Ölçekleyici (scaler) parametreleri, atayıcı (imputer) medyanları, kırpma sınırı (clip bound) veya yüzdelik (percentile) eşikleri, action bin çeyreklik eşikleri (action-bin quartiles), davranış politikası tahminleyicisi (behavior policy estimator), FQE tahminleyicisi (FQE estimator) ve normalleştirme (normalization) sabitleri eğitim verisi üzerinde uydurulur (fit). Doğrulama ve test üzerinde yalnız eğitim verisinde uydurulmuş dönüşümler (transforms) uygulanır. Bu seçim, sağlık verisindeki sonuç sızıntısı ve tasarım sonrası model seçimi risklerine karşı önerilen raporlama ilkeleriyle uyumludur \cite{gottesman2019guidelines,liu2020healthcare}.
+\section{Ön İşleme ve Sızıntısız Sözleşmeler}
+Temel kural `fit on train, transform everywhere' şeklindedir. Ölçekleyici parametreleri, atayıcı medyanları, kırpma sınırı veya yüzdelik eşikleri, action bin çeyreklik eşikleri, behavior policy estimator, FQE estimator ve normalleştirme sabitleri eğitim verisi üzerinde uydurulur. Doğrulama ve test üzerinde yalnız eğitim verisinde uydurulmuş dönüşümler uygulanır. Bu seçim, sağlık verisindeki sonuç sızıntısı ve tasarım sonrası model seçimi risklerine karşı önerilen raporlama ilkeleriyle uyumludur \cite{gottesman2019guidelines,liu2020healthcare}.
 
-Fizyolojik olarak makul olmayan değerler geçerli aralık (valid range) dışında filtrelenir veya kırpılır (clip). Kırpma (clipping) ve normalleştirme parametreleri eğitim bölmesi üzerinde uydurulur. Bu tercih yapılmasaydı doğrulama/test dağılımının uç değer bilgisi eğitim öncesi veri dönüşümlerine yansıyabilir ve raporlanan performans fazla iyimser olurdu.
+Fizyolojik olarak makul olmayan değerler geçerli aralık dışında filtrelenir veya kırpılır. Kırpma ve normalleştirme parametreleri eğitim bölmesi üzerinde uydurulur. Bu tercih yapılmasaydı doğrulama/test dağılımının uç değer bilgisi eğitim öncesi veri dönüşümlerine yansıyabilir ve raporlanan performans fazla iyimser olurdu.
 
-\subsection{Aşama 0 Presweep Audit}
-Presweep audit, eğitim başlamadan önce veri sözleşmelerini test eder. Sağlıkta RL için bu kapı zorunludur; küçük bir bölme sızıntısı veya sonuç sızıntısı (outcome leakage), gözlemsel veride gerçek politika kalitesinden çok daha büyük görünen kazançlar üretebilir \cite{gottesman2019guidelines}. Denetim seyrek replay dataset (sparse replay) üretimini, seyrek ve SOFA-biçimli replay dataset (SOFA-shaped replay) dosyalarının aynı split/preprocessing/action bin/transition indexing/terminal outcome tanımlarını kullanmasını, aksiyon binlerinin (action bins) yalnız eğitim verisi (train-only) fit edilmesini, atama/ölçekleme/kırpma/normalleştirme (imputation/scaling/clipping/normalization) istatistiklerinin yalnız eğitim verisi kalmasını, doğrulama FQE'sinin ortak terminal sağkalım/ölüm ödülü (terminal survival/death reward) ile çalışmasını, zamansal hizalamayı (temporal alignment), hasta çakışması bulunmamasını ve mortalite/taburculuk (mortality/discharge) gibi gelecek sonuç bilgisinin (future outcome) durum özelliklerine (state features) sızmamasını kontrol eder.
+\subsection{Aşama 0 Ön Denetim}
+Ön denetim, eğitim başlamadan önce veri sözleşmelerini test eder. Sağlıkta RL için bu kapı zorunludur; küçük bir bölme sızıntısı veya sonuç sızıntısı, gözlemsel veride gerçek politika kalitesinden çok daha büyük görünen kazançlar üretebilir \cite{gottesman2019guidelines}. Denetim seyrek replay dataset üretimini, seyrek ve SOFA-biçimli replay dataset dosyalarının aynı split/preprocessing/action bin/transition indexing/terminal outcome tanımlarını kullanmasını, aksiyon binlerinin yalnız eğitim verisi fit edilmesini, atama/ölçekleme/kırpma/normalleştirme istatistiklerinin yalnız eğitim verisi kalmasını, doğrulama FQE'sinin ortak terminal sağkalım/ölüm ödülü ile çalışmasını, zamansal hizalamayı, hasta çakışması bulunmamasını ve mortalite/taburculuk gibi gelecek sonuç bilgisinin durum özelliklerine sızmamasını kontrol eder.
 
 \begin{table}[t]
 \centering
-\caption{Presweep audit summary.}
+\caption{Ön denetim özeti.}
 \label{tab:audit}
 \begin{tabular}{lrrr}
 \toprule
@@ -174,51 +170,57 @@ Outcome leakage analizi & \multicolumn{3}{c}{Başarılı} \\
 \end{tabular}
 \end{table}
 
-Bu denetim kapısı, aynı hastanın farklı bölmelere (splits) düşmesi veya terminal bilginin özelliklere sızması gibi klinik yapay zeka çalışmalarında sık görülen geçerlilik ihlallerini deney başlamadan önce sınırlar.
+Bu denetim kapısı, aynı hastanın farklı bölmelere düşmesi veya terminal bilginin özelliklere sızması gibi klinik yapay zeka çalışmalarında sık görülen geçerlilik ihlallerini deney başlamadan önce sınırlar.
 
-\section{Baseline Politikalar (Baseline Policies)}
-Final test karşılaştırması üç referans politika içerir. Clinician replay, replay dataset'indeki gözlenen klinisyen aksiyonlarını değerlendirir ve davranış verisinin kendisini referans alır. No-treatment politikası (no-treatment policy), uygun yerlerde vazopresör yok/sıvı yok (no-vasopressor/no-fluid) bin'ini seçen basit kontrol politikasıdır. Behavior Cloning (BC) ise klinisyen aksiyonlarını gözetimli öğrenme (supervised learning) ile taklit eder. Bu baselinelar, IQL çıktısının davranış politikası ve basit kontrol stratejilerine göre bağlamlandırılmasını sağlar.
+\section{Baseline Politikalar}
+Final test karşılaştırması üç referans politika içerir. Clinician replay, replay dataset'indeki gözlenen klinisyen aksiyonlarını değerlendirir ve davranış verisinin kendisini referans alır. No-treatment politikası, uygun yerlerde vazopresör yok/sıvı yok bin'ini seçen basit kontrol politikasıdır. Behavior Cloning (BC) ise klinisyen aksiyonlarını gözetimli öğrenme ile taklit eder. Bu baselinelar, IQL çıktısının davranış politikası ve basit kontrol stratejilerine göre bağlamlandırılmasını sağlar.
 
 \section{Implicit Q-Learning (IQL) Algoritması}
-Implicit Q-Learning (IQL), veri seti dışındaki (out-of-dataset) aksiyonları maksimize etmeden politika çıkarır \cite{iql}. Model üç parça öğrenir: eleştirmen (critic), değer işlevi (value function) ve aktör (actor). Eleştirmen $Q_\theta(s,a)$ durum-aksiyon değerini (state-action value) tahmin eder. Değer işlevi, klasik maksimum operatörü (max operator) yerine expectile regresyonu (expectile regression) ile uydurulur. Expectile düştükçe değer hedefi davranış verisine yaklaşır; expectile yükseldikçe veri içindeki daha yüksek değerli aksiyonlara ağırlık verir.
+Offline Reinforcement Learning, öğrenilen politikanın sabit veri kümesinde gözlenmiş davranış desteği içinde kalmasını amaçlar. Davranış desteği, belirli hasta durumlarında hangi tedavi aksiyonlarının tarihsel klinik veride yeterli sıklıkta görüldüğünü ifade eder. Destek dışına çıkan politikalar, az gözlenen veya hiç gözlenmeyen sıvı-vazopresör kombinasyonlarına yüksek değer atayabilir; bu da özellikle fonksiyon yaklaştırıcı kullanan Q-öğrenme yöntemlerinde ekstrapolasyon hatasına yol açar.
 
-Değer amacı (value objective) asimetrik expectile kaybı (expectile loss) ile yazılır:
+IQL bu riski açık bir aksiyon cezası eklemeden, in-sample bir öğrenme stratejisiyle azaltmaya çalışır. Klasik Q-learning'in aksine, bir sonraki durumda veri setinde gözlenmemiş aksiyonlar üzerinde doğrudan maksimum almaz. Bunun yerine expectile değer öğrenimiyle veri içindeki yüksek değerli aksiyonları tahmin eder ve avantaj ağırlıklı Behavior Cloning ile aktörü bu aksiyonlara yaklaştırır \cite{iql}. Bu nedenle IQL, davranış verisinden tamamen kopmadan politika iyileştirmeyi hedefler; ancak veri dağılımında hiç temsil edilmeyen yeni tedavi stratejilerini keşfedemez.
+
+CQL ise aynı problemi daha kötümser bir düzenlileştirme ile ele alır ve low-support action'ların Q değerini cezalandırır \cite{cql}. Bu yaklaşım ekstrapolasyon hatasına karşı güçlüdür; fakat yanlış ayarlandığında klinikte nadir ama gerekli müdahaleleri de bastırabilir. Bu nedenle IQL'nin seçimi, agresif kötümserlik ile destek içinde kontrollü politika iyileştirme arasında bilinçli bir metodolojik takas olarak değerlendirilmiştir.
+
+IQL modeli üç parça öğrenir: eleştirmen, değer işlevi ve aktör. Eleştirmen $Q_\theta(s,a)$ durum-aksiyon değerini tahmin eder. Değer işlevi, klasik maksimum operatörü yerine expectile regresyonu ile uydurulur. Expectile düştükçe değer hedefi davranış verisine yaklaşır; expectile yükseldikçe veri içindeki daha yüksek değerli aksiyonlara ağırlık verir.
+
+Değer amacı asimetrik expectile kaybı ile yazılır:
 \begin{equation}
 L_V(\psi)=\mathbb{E}_{(s,a)\sim D}\left[L_2^\tau(Q_\theta(s,a)-V_\psi(s))\right],
 \end{equation}
 \begin{equation}
 L_2^\tau(u)=|\tau-\mathbb{I}(u<0)|u^2.
 \end{equation}
-$\tau$ 1'e yaklaştıkça değer fonksiyonu davranış verisi içinde daha iyi görünen aksiyonların üst expectile değerine (upper expectile) yaklaşır. Q fonksiyonu ise veri dışı aksiyon maksimumu yerine öğrenilen durum-değer hedefiyle (state-value target) güncellenir:
+$\tau$ 1'e yaklaştıkça değer fonksiyonu davranış verisi içinde daha iyi görünen aksiyonların üst expectile değerine yaklaşır. Q fonksiyonu ise veri dışı aksiyon maksimumu yerine öğrenilen durum-değer hedefiyle güncellenir:
 \begin{equation}
 L_Q(\theta)=\mathbb{E}_{D}\left[(r+\gamma V_\psi(s')-Q_\theta(s,a))^2\right].
 \end{equation}
 
-Aktör, veri seti içindeki (in-dataset) aksiyonları avantaja (advantage) göre ağırlıklandırarak öğrenir:
+Aktör, veri seti içindeki aksiyonları avantaja göre ağırlıklandırarak öğrenir:
 \begin{equation}
 A(s,a)=Q_\theta(s,a)-V_\psi(s),
 \end{equation}
 \begin{equation}
 L_\pi(\phi)=\mathbb{E}_{D}\left[\exp(\beta A(s,a))\log \pi_\phi(a|s)\right].
 \end{equation}
-Burada $\beta$ ya da temperature politika çıkarımının agresifliğini kontrol eder. Düşük temperature davranış politikasına daha yakın ve konservatif politika çıkarır; yüksek temperature potansiyel getiriyi artırabilir fakat low-support action'lara kayma riskini de büyütür. Bu nedenle güvenli (safe), referans (baseline) ve iyimser (optimistic) ayarları birlikte denenmiştir.
+Burada $\beta$ ya da temperature politika çıkarımının agresifliğini kontrol eder. Düşük temperature davranış politikasına daha yakın ve konservatif politika çıkarır; yüksek temperature potansiyel getiriyi artırabilir fakat low-support action'lara kayma riskini de büyütür. Bu nedenle güvenli, referans ve iyimser ayarları birlikte denenmiştir.
 
-\section{IQL Final Sweep Tasarımı}
-Final sweep iki ödül varyantı, üç öğrenme oranı (learning-rate) rejimi ve üç IQL ayarını on sekiz Aşama 1 adayına genişletir. Öğrenme oranı rejimleri (learning-rate regimes) aktör, eleştirmen ve değer (value) optimizasyonunu ayrı olarak kontrol eder. Konservatif öğrenme oranı rejimi finalde öne çıkarılmıştır; çünkü offline RL'de agresif eleştirmen güncellemeleri (critic updates) veri dışı Q tahminlerini büyütebilir ve politika çıkarımı bu hataları çoğaltabilir \cite{cql,iql}. Referans rejim (baseline regime) yalnızca referans çapa (baseline anchor) olarak tutulmuştur; hiç denenmeseydi konservatif seçimin gerçekten gerekli olup olmadığı gözlenemezdi. Aktör-konservatif rejim ise politika güncellemelerini yavaşlatmanın, eleştirmen/değer (critic/value) öğrenmesini tamamen yavaşlatmadan destek uyumunu artırıp artırmadığını test eder.
+\section{Nihai Deney Taraması}
+Nihai deney taraması iki ödül varyantı, üç öğrenme oranı rejimi ve üç IQL ayarını on sekiz Aşama 1 adayına genişletir. Öğrenme oranı rejimleri aktör, eleştirmen ve değer optimizasyonunu ayrı olarak kontrol eder. Konservatif öğrenme oranı rejimi finalde öne çıkarılmıştır; çünkü offline RL'de agresif eleştirmen güncellemeleri veri dışı Q tahminlerini büyütebilir ve politika çıkarımı bu hataları çoğaltabilir \cite{cql,iql}. Referans rejim yalnızca referans çapa olarak tutulmuştur; hiç denenmeseydi konservatif seçimin gerçekten gerekli olup olmadığı gözlenemezdi. Aktör-konservatif rejim ise politika güncellemelerini yavaşlatmanın, eleştirmen/değer öğrenmesini tamamen yavaşlatmadan destek uyumunu artırıp artırmadığını test eder.
 
 \begin{table*}[t]
 \centering
-\caption{Final IQL hyperparameter grid (hiperparametre ızgarası).}
+\caption{Nihai deney taraması hiperparametre ızgarası.}
 \label{tab:grid_full}
 \begin{tabular}{lll}
 \toprule
 Boyut & Seçenek & Değerler \\
 \midrule
-Ödül & seyrek & terminal sağkalım/ölüm faydası (terminal survival/death utility) \\
-Ödül & SOFA-biçimli & terminal fayda + SOFA değişim şekillendirmesi (shaping) \\
-LR rejimi & konservatif (conservative) & aktör $3\times10^{-5}$, eleştirmen $1\times10^{-4}$, değer $1\times10^{-4}$ \\
+Ödül & seyrek & terminal sağkalım/ölüm faydası \\
+Ödül & SOFA-biçimli & terminal fayda + SOFA değişim şekillendirmesi \\
+LR rejimi & konservatif & aktör $3\times10^{-5}$, eleştirmen $1\times10^{-4}$, değer $1\times10^{-4}$ \\
 LR rejimi & referans & aktör $1\times10^{-4}$, eleştirmen $3\times10^{-4}$, değer $3\times10^{-4}$ \\
-LR rejimi & aktör-konservatif (actor-conservative) & aktör $3\times10^{-5}$, eleştirmen $3\times10^{-4}$, değer $3\times10^{-4}$ \\
+LR rejimi & aktör-konservatif & aktör $3\times10^{-5}$, eleştirmen $3\times10^{-4}$, değer $3\times10^{-4}$ \\
 IQL ayarı & güvenli & expectile 0.7, temperature 1.0 \\
 IQL ayarı & referans & expectile 0.7, temperature 3.0 \\
 IQL ayarı & iyimser & expectile 0.8, temperature 3.0 \\
@@ -236,51 +238,51 @@ Parametre & Değer \\
 \midrule
 Algoritma & IQL \\
 Epoch & 200 \\
-Yığın boyutu (batch size) & 256 \\
-İskonto (discount) & 0.99 \\
-Politika gizli katman boyutları (policy hidden sizes) & [256, 256] \\
-Değer gizli katman boyutları (value hidden sizes) & [256, 256] \\
-Eleştirmen gizli katman boyutları (critic hidden sizes) & [256, 256] \\
+Yığın boyutu & 256 \\
+İskonto & 0.99 \\
+Politika gizli katman boyutları & [256, 256] \\
+Değer gizli katman boyutları & [256, 256] \\
+Eleştirmen gizli katman boyutları & [256, 256] \\
 Polyak tau & 0.005 \\
-Hedef güncelleme sıklığı (target update freq) & 10 \\
-Gradyan kırpma (grad clip) & 10.0 \\
-Cihaz (device) & auto \\
+Hedef güncelleme sıklığı & 10 \\
+Gradyan kırpma & 10.0 \\
+Cihaz & auto \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Sabit parametreler korunmuştur; böylece final sweep yalnız ödül (reward), öğrenme oranı rejimi, expectile ve temperature etkisini ölçer. Sabit parametreler, 18 konfigürasyonun etkisini ödül, öğrenme oranı ve IQL ayarları üzerinde izole etmeyi sağlar.
+Sabit parametreler korunmuştur; böylece nihai deney taraması yalnız ödül, öğrenme oranı rejimi, expectile ve temperature etkisini ölçer. Sabit parametreler, 18 konfigürasyonun etkisini ödül, öğrenme oranı ve IQL ayarları üzerinde izole etmeyi sağlar.
 
 \begin{algorithm}[t]
-\caption{Final IQL Sweep ve Raporlama İş Akışı}
+\caption{Nihai deney taraması ve raporlama iş akışı}
 \label{alg:workflow}
 \begin{algorithmic}[1]
-\STATE Replay dataset, bölme ve ön işleme (replay, split, preprocessing) ve zamansal sözleşmeleri doğrula
+\STATE Replay dataset, bölme ve ön işleme ve zamansal sözleşmeleri doğrula
 \STATE Ödül, öğrenme oranı ve IQL ayarlarını genişlet
 \FOR{her Aşama 1 adayı}
  \STATE Seed 42 ile politikayı eğit
  \STATE Doğrulama metriklerini ve destek teşhislerini hesapla
 \ENDFOR
 \STATE Güvenlik veya destek kapılarını geçemeyen adayları işaretle
-\STATE Bileşik skor (composite), ödül dengesi, güvenlik ve çeşitlilik slotlarıyla finalist seç
+\STATE Bileşik skor, ödül dengesi, güvenlik ve çeşitlilik slotlarıyla finalist seç
 \FOR{her finalist ve her doğrulama seed'i}
  \STATE Seed 123 ve 456 ile politikayı eğit veya yeniden kullan
  \STATE Multi-seed değerlendirme kanıtını topla
 \ENDFOR
 \STATE Tekrarlanan seed kanıtıyla final konfigürasyonu seç
-\STATE Baseline karşılaştırmaları (baseline comparisons), grafikler ve yeniden üretilebilirlik çıktıları üret
+\STATE Baseline karşılaştırmaları, grafikler ve yeniden üretilebilirlik çıktıları üret
 \end{algorithmic}
 \end{algorithm}
 
-\section{Seed Stratejisi (Seed Strategy) ve Karar Kuralı}
-Tek seed'li (single-seed) değerlendirme, offline RL modellerinde kararlı politika seçimi için yetersiz kanıt üretir. Başlatma (initialization), mini-yığın (minibatch) sırası ve stokastik optimizasyon (stochastic optimization) aynı konfigürasyonun FQE/WIS değerini değiştirebilir. Aşama 1'de 18 konfigürasyon seed 42 ile taranır; ardından altı finalist seed 123 ve 456 ile yeniden değerlendirilir. Böylece tüm $2\times3\times3\times3=54$ çalıştırma (run) yerine 30 çalıştırma çalıştırılır. Bu tasarım hesaplama maliyetini düşürür, fakat final adayları üç seed üzerinden raporladığı için seed varyansı (seed variance) görünür kalır.
+\section{Seed Stratejisi ve Karar Kuralı}
+Tek seed'li değerlendirme, offline RL modellerinde kararlı politika seçimi için yetersiz kanıt üretir. Başlatma, mini-yığın sırası ve stokastik optimizasyon aynı konfigürasyonun FQE/WIS değerini değiştirebilir. Aşama 1'de 18 konfigürasyon seed 42 ile taranır; ardından altı finalist seed 123 ve 456 ile yeniden değerlendirilir. Böylece tüm $2\times3\times3\times3=54$ çalıştırma yerine 30 çalıştırma çalıştırılır. Bu tasarım hesaplama maliyetini düşürür, fakat final adayları üç seed üzerinden raporladığı için seed varyansı görünür kalır.
 
-Hiperparametre seçimi test set üzerinden yapılmaz. Seçim doğrulama bölmesi üzerindeki FQE, WIS, ESS, clinician agreement, aksiyon dağılımı (action distribution) makullüğü, low-support action uyarıları, ödül eğrisi (reward curve) ve eğitim kararlılığı (training stability) sinyallerine dayanır. Tek bir metrikle karar verilmez. Örneğin yüksek WIS ama çok düşük ESS varsa bu sonuç güvenilir kabul edilmez.
+Hiperparametre seçimi test set üzerinden yapılmaz. Seçim doğrulama bölmesi üzerindeki FQE, WIS, ESS, clinician agreement, aksiyon dağılımı makullüğü, low-support action uyarıları, ödül eğrisi ve eğitim kararlılığı sinyallerine dayanır. Tek bir metrikle karar verilmez. Örneğin yüksek WIS ama çok düşük ESS varsa bu sonuç güvenilir kabul edilmez.
 
-Bir konfigürasyon final aday olmadan önce doğrulama performansı rekabetçi olmalı, ESS çok düşük olmamalı, FQE sonucu WIS ile tamamen çelişmemeli, aksiyon dağılımı klinik olarak makul olmalı, low-support action oranı kabul edilebilir düzeyde olmalı, farklı seed'lerde (seeds) performans tamamen kararsız olmamalı ve test set seçim sürecinde kullanılmamış olmalıdır.
+Bir konfigürasyon final aday olmadan önce doğrulama performansı rekabetçi olmalı, ESS çok düşük olmamalı, FQE sonucu WIS ile tamamen çelişmemeli, aksiyon dağılımı klinik olarak makul olmalı, low-support action oranı kabul edilebilir düzeyde olmalı, farklı seed'lerde performans tamamen kararsız olmamalı ve test set seçim sürecinde kullanılmamış olmalıdır.
 
 \section{Aşama 1 Finalist Seçim Sonuçları}
-Aşama 1 seçici altı finalist üretmiştir. En yüksek iki aday SOFA-biçimli ödül ve konservatif öğrenme oranı kullanırken, diğer slotlar seyrek ödül temsilini, güvenlik-destek dengesini, referans çapa seçimini ve çeşitlilik tamamlama (diversity backfill) kuralını korur. Tablo~\ref{tab:finalists}, seçilen adayları ve ana doğrulama teşhislerini gösterir.
+Aşama 1 seçici altı finalist üretmiştir. En yüksek iki aday SOFA-biçimli ödül ve konservatif öğrenme oranı kullanırken, diğer slotlar seyrek ödül temsilini, güvenlik-destek dengesini, referans çapa seçimini ve çeşitlilik tamamlama kuralını korur. Tablo~\ref{tab:finalists}, seçilen adayları ve ana doğrulama teşhislerini gösterir.
 
 \begin{table*}[t]
 \centering
@@ -288,19 +290,19 @@ Aşama 1 seçici altı finalist üretmiştir. En yüksek iki aday SOFA-biçimli 
 \label{tab:finalists}
 \begin{tabular}{rllllrrrr}
 \toprule
-Sıra & Yuva (slot) & Ödül & LR & IQL & FQE & WIS & support mass & agreement \\
+Sıra & Yuva & Ödül & LR & IQL & FQE & WIS & support mass & agreement \\
 \midrule
-1 & en iyi bileşik (top composite) & SOFA & konservatif & güvenli & 3.169 & 8.616 & 0.965 & 0.418 \\
+1 & en iyi bileşik & SOFA & konservatif & güvenli & 3.169 & 8.616 & 0.965 & 0.418 \\
 2 & en iyi bileşik & SOFA & konservatif & referans & 2.280 & 7.009 & 0.973 & 0.401 \\
-3 & en iyi seyrek (best sparse) & sparse & konservatif & güvenli & 1.954 & 8.740 & 0.971 & 0.411 \\
-4 & güvenlik desteği (safety support) & sparse & referans & referans & 1.421 & 6.768 & 0.973 & 0.410 \\
+3 & en iyi seyrek & sparse & konservatif & güvenli & 1.954 & 8.740 & 0.971 & 0.411 \\
+4 & güvenlik desteği & sparse & referans & referans & 1.421 & 6.768 & 0.973 & 0.410 \\
 5 & referans çapa & sparse & referans & güvenli & 2.345 & 8.125 & 0.963 & 0.416 \\
 6 & çeşitlilik tamamlama & sparse & konservatif & referans & 2.012 & 7.782 & 0.969 & 0.407 \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-Finalist havuzu (finalist pool) tek bir skora göre seçilmez. Klinik offline learning'de yüksek değer tahmini (value estimate), düşük behavior support ile birleştiğinde güvenilir değildir \cite{gottesman2019guidelines}. Yalnız en yüksek FQE veya WIS kullanılsaydı, düşük ESS ya da zayıf clinician exact-bin agreement taşıyan bir politika Aşama 2'ye geçebilirdi. Çeşitlilik slotları da bu yüzden korunur: Aşama 2 yalnız SOFA-konservatif adayları tekrar etmez; seyrek ödülün ve baseline settings'in sınırlarını da gösterir.
+Finalist havuzu tek bir skora göre seçilmez. Klinik offline learning'de yüksek değer tahmini, düşük behavior support ile birleştiğinde güvenilir değildir \cite{gottesman2019guidelines}. Yalnız en yüksek FQE veya WIS kullanılsaydı, düşük ESS ya da zayıf clinician exact-bin agreement taşıyan bir politika Aşama 2'ye geçebilirdi. Çeşitlilik slotları da bu yüzden korunur: Aşama 2 yalnız SOFA-konservatif adayları tekrar etmez; seyrek ödülün ve baseline settings'in sınırlarını da gösterir.
 
 \begin{figure}[t]
  \centering
@@ -310,9 +312,9 @@ Finalist havuzu (finalist pool) tek bir skora göre seçilmez. Klinik offline le
 \end{figure}
 
 \section{Aşama 2 ve Baseline Değerlendirmesi}
-Aşama 2, altı finalist ve üç seed'den oluşan on sekiz satırlık bir tekrarlı-seed özeti üretmiştir. Her finalist için seed 42, 123 ve 456 kontrol noktaları (checkpoints) test replay dataset (test replay) üzerinde yeniden değerlendirilmiştir. Tek seed'li seçim yapılmış olsaydı rastgele başlatma, mini-yığın sırası veya erken eğitim dalgalanması final politika kararını belirleyebilirdi. Üç seed, hesaplama maliyetini sınırlı tutarken bu varyansı görünür yapar; daha fazla seed istatistiksel güveni artırırdı, fakat final sweep maliyetini doğrusal olarak büyütürdü.
+Aşama 2, altı finalist ve üç seed'den oluşan on sekiz satırlık bir tekrarlı-seed özeti üretmiştir. Her finalist için seed 42, 123 ve 456 kontrol noktaları test replay dataset üzerinde yeniden değerlendirilmiştir. Tek seed'li seçim yapılmış olsaydı rastgele başlatma, mini-yığın sırası veya erken eğitim dalgalanması final politika kararını belirleyebilirdi. Üç seed, hesaplama maliyetini sınırlı tutarken bu varyansı görünür yapar; daha fazla seed istatistiksel güveni artırırdı, fakat nihai deney taramasının maliyetini doğrusal olarak büyütürdü.
 
-Final skor; FQE, WIS, ESS, behavior support mass, clinician exact-bin agreement, low-support cezası ve güvenlik bayraklarını üç seed ortalamasıyla birleştirir. FQE fonksiyon yaklaştırmaya dayalı değer tahmini verir; WIS davranış politikasına göre ağırlıklandırılmış gözlemsel kanıt sağlar. İkisini birlikte kullanmak, tek tahminleyicinin (estimator) yanlılık-varyans profilini final kararına dönüştürmemek içindir \cite{gottesman2019guidelines,voloshin2021ope,precup2000offpolicy}. ESS ve behavior support mass olmasaydı, birkaç yüksek ağırlıklı yörünge yüksek WIS değerini güvenilir gösterebilirdi. Clinician agreement (klinisyen uyumu) olmasaydı politika davranış verisinden gereğinden fazla uzaklaşabilirdi. Bu kurala göre final konfigürasyon SOFA-biçimli (SOFA-shaped), konservatif öğrenme oranı ve güvenli IQL (safe IQL) ayarına sahip `iql\_sofa\_shaped\_conservative\_safe' modelidir.
+Final skor; FQE, WIS, ESS, behavior support mass, clinician exact-bin agreement, low-support cezası ve güvenlik bayraklarını üç seed ortalamasıyla birleştirir. FQE fonksiyon yaklaştırmaya dayalı değer tahmini verir; WIS davranış politikasına göre ağırlıklandırılmış gözlemsel kanıt sağlar. İkisini birlikte kullanmak, tek tahminleyicinin yanlılık-varyans profilini final kararına dönüştürmemek içindir \cite{gottesman2019guidelines,voloshin2021ope,precup2000offpolicy}. ESS ve behavior support mass olmasaydı, birkaç yüksek ağırlıklı yörünge yüksek WIS değerini güvenilir gösterebilirdi. Clinician agreement olmasaydı politika davranış verisinden gereğinden fazla uzaklaşabilirdi. Bu kurala göre final konfigürasyon, SOFA-biçimli ödül, konservatif öğrenme oranı ve güvenli IQL ayarına sahip final modeldir.
 
 \begin{table*}[t]
 \centering
@@ -367,7 +369,7 @@ Seçili IQL & 8.203 & 29.4 & 0.414 \\
 
 \begin{table}[t]
 \centering
-\caption{Kazanan konfigürasyonun test diagnostics (test teşhisleri). WIS confidence interval, 50 hasta-düzeyi patient-level bootstrap resampling ile hesaplanmıştır.}
+\caption{Kazanan konfigürasyonun test diagnostics. WIS confidence interval, 50 hasta-düzeyi patient-level bootstrap ile hesaplanmıştır.}
 \label{tab:baseline}
 \begin{tabular}{lr}
 \toprule
@@ -388,7 +390,7 @@ Low-support action deviation & 0.009 \\
 \begin{figure}[t]
  \centering
  \includegraphics[width=.98\columnwidth]{figures/baseline_comparison.png}
- \caption{Final seçili IQL politikası ve baselines için WIS ve ESS teşhisleri. Behavior Cloning (BC) WIS değeri yüksek görünse de ESS=1.6 olduğu için güvenilir politika üstünlüğü kanıtı olarak yorumlanmaz.}
+ \caption{Final seçili IQL politikası ve baselines için WIS ve ESS teşhisleri. Behavior Cloning WIS değeri yüksek görünse de ESS=1.6 olduğu için güvenilir politika üstünlüğü kanıtı olarak yorumlanmaz.}
  \label{fig:baseline_comparison}
 \end{figure}
 
@@ -409,12 +411,12 @@ Low-support action deviation & 0.009 \\
 \begin{figure}[t]
  \centering
  \includegraphics[width=.98\columnwidth]{figures/ope_metric_ranking.png}
- \caption{Off-Policy Evaluation (OPE) metriklerine göre finalist sıralaması. Grafik, Tablo~\ref{tab:stage2}'deki bileşik skorun FQE, WIS, ESS ve destek göstergeleriyle birlikte okunması gerektiğini gösterir.}
+ \caption{OPE metriklerine göre finalist sıralaması. Grafik, Tablo~\ref{tab:stage2}'deki bileşik skorun FQE, WIS, ESS ve destek göstergeleriyle birlikte okunması gerektiğini gösterir.}
  \label{fig:ope_metric_ranking}
 \end{figure}
 
-\section{Aksiyon ve Güvenlik Teşhisleri (Action and Safety Diagnostics)}
-Değer metriği (value metric) tek başına klinik politika güvenliği göstermez. Bir politika iyi FQE üretebilir, fakat gözlemsel veride nadir görülen sıvı-vazopresör kombinasyonlarına kayabilir. Bu yüzden action heatmap, behavior support mass, low-support rate, clinician agreement ve action entropy aynı anda okunur.
+\section{Aksiyon ve Güvenlik Teşhisleri}
+Değer metriği tek başına klinik politika güvenliği göstermez. Bir politika iyi FQE üretebilir, fakat gözlemsel veride nadir görülen sıvı-vazopresör kombinasyonlarına kayabilir. Bu yüzden action heatmap, behavior support mass, low-support rate, clinician agreement ve action entropy aynı anda okunur.
 
 \begin{figure}[t]
  \centering
@@ -426,7 +428,7 @@ Değer metriği (value metric) tek başına klinik politika güvenliği gösterm
 \begin{figure}[t]
  \centering
  \includegraphics[width=.98\columnwidth]{figures/bootstrap_ci.png}
- \caption{Final seçili IQL politikasının üç seed için patient-level bootstrap WIS confidence intervals (CI). Güven aralıkları 50 patient-level bootstrap resampling ile hesaplanmıştır ve düşük ESS nedeniyle temkinli yorumlanmalıdır.}
+ \caption{Final seçili IQL politikasının üç seed için patient-level bootstrap WIS CI. Güven aralıkları 50 patient-level bootstrap ile hesaplanmıştır ve düşük ESS nedeniyle temkinli yorumlanmalıdır.}
  \label{fig:bootstrap_ci}
 \end{figure}
 
@@ -451,24 +453,24 @@ Değer metriği (value metric) tek başına klinik politika güvenliği gösterm
  \label{fig:action_deviation_severity}
 \end{figure}
 
-Teşhis okuması (diagnostic reading) somut sorulara dayanır: politika sürekli yüksek sıvı veya yüksek vazopresör mü öneriyor, `no-treatment' bini'ne çöküyor mu, low-support action'ları sık seçiyor mu, yüksek riskli alt gruplarda uyarılar artıyor mu, ödül varyantı (reward variant) değişince aksiyon dağılımı dramatik biçimde değişiyor mu? Protokol bu sorular için clinician action distribution, IQL policy action distribution, difference heatmap, low-support action oranı, subgroup'a göre clinician agreement, high-risk subgroup policy action frequency, eğitim kaybı eğrileri (training loss curves), doğrulama metrik eğrileri, ödül varyantı kutu grafiği, LR rejimi karşılaştırması ve expectile--temperature karşılaştırması grafiklerini çıktı olarak üretir.
+Teşhis okuması somut sorulara dayanır: politika sürekli yüksek sıvı veya yüksek vazopresör mü öneriyor, `no-treatment' bini'ne çöküyor mu, low-support action'ları sık seçiyor mu, yüksek riskli alt gruplarda uyarılar artıyor mu, ödül varyantı değişince aksiyon dağılımı dramatik biçimde değişiyor mu? Protokol bu sorular için clinician action distribution, IQL policy action distribution, difference heatmap, low-support action oranı, subgroup'a göre clinician agreement, high-risk subgroup policy action frequency, eğitim kaybı eğrileri, doğrulama metrik eğrileri, ödül varyantı kutu grafiği, LR rejimi karşılaştırması ve expectile--temperature karşılaştırması grafiklerini çıktı olarak üretir.
 
 Aşama 2 finalistlerinde behavior support mass 0.990--0.991, clinician exact-bin agreement 0.401--0.418 aralığındadır. Kazanan politikanın exact-bin agreement değeri 0.414'tür; yani kararların 0.586'lık kısmı klinisyen davranışıyla birebir aynı değildir. Buna rağmen low-support action deviation değeri 0.009'da kalır. Bu ayrım önemlidir: politika klinisyeni kopyalamaz, fakat çoğu sapma veri desteği bulunan komşu tedavi yörüngelerinde kalır. ESS ise tüm finalistlerde 50 eşiğinin altındadır. Bu uyarı, az sayıda etkili yörüngenin taşıdığı WIS tahmininin kesin klinik sonuç gibi yorumlanmasını engeller. Bu nedenle final karar ``klinik üstünlük'' değil, destek kısıtı belirtilmiş retrospektif OPE sonucudur.
 
-\section{Yeniden Üretilebilirlik (Reproducibility) ve Teknoloji Yığını}
-İş akışı protokoldeki ana boşlukları kapatır: final IQL sweep runner, 18 konfigürasyonlu grid, workflow seviyesinde orkestrasyon, presweep audit, final-altı seçim mantığı, tekrarlı-seed Aşama 2 birleştirmesi, baseline karşılaştırması ve final grafik raporları. Çıktı seti (artifact set) presweep audit sonucunu, Aşama 1 seçim tablosunu, Aşama 2 seed özetini (seed summary), final metrik paketi (final metrics bundle)'ı, baseline politika gösterimini ve raporda kullanılan behavior support mass, seed varyansı, Pareto frontier, OPE sıralaması, aksiyon, bootstrap, clinician agreement, subgroup safety ve sapma şiddeti grafiklerini içerir. Aşama 2 değerlendirmesi 18 finalist-seed (finalist-seed) satırı olarak saklanır.
+\section{Yeniden Üretilebilirlik ve Teknoloji Yığını}
+İş akışı protokoldeki ana boşlukları kapatır: nihai IQL deney taraması, 18 konfigürasyonlu grid, workflow seviyesinde orkestrasyon, ön denetim, final-altı seçim mantığı, tekrarlı-seed Aşama 2 birleştirmesi, baseline karşılaştırması ve final grafik değerlendirmeleri. Çıktı seti ön denetim sonucunu, Aşama 1 seçim tablosunu, Aşama 2 seed özetini, final metrik paketini, baseline politika gösterimini ve behavior support mass, seed varyansı, Pareto frontier, OPE sıralaması, aksiyon, bootstrap, clinician agreement, subgroup safety ve sapma şiddeti grafiklerini içerir. Aşama 2 değerlendirmesi 18 finalist-seed satırı olarak saklanır.
 
-Teknoloji yığını (technology stack) Python ve `uv' tabanlı ortam yönetimi, yüksek hızlı `Polars' ve `PyArrow' tabanlı Parquet veri dönüşümü, `PyTorch' ve özelleştirilmiş `d3rlpy' tabanlı RL eğitimi, `Hydra' konfigürasyon yönetimi, `MLflow' deney takibi ve IEEE LaTeX raporlamasından oluşur. Hardware-agnostic execution layer (donanımdan bağımsız yürütme katmanı) sayesinde eğitim kodu MPS, CUDA veya otomatik cihaz seçimiyle çalışabilir. Bu altyapı ayrıştırılmasaydı deney sonuçları belirli bir donanıma veya elle değiştirilmiş konfigürasyonlara bağımlı hale gelirdi.
+Teknoloji yığını Python ve `uv' tabanlı ortam yönetimi, yüksek hızlı `Polars' ve `PyArrow' tabanlı Parquet veri dönüşümü ve `PyTorch' tabanlı RL eğitiminden oluşur. Hardware-agnostic execution layer sayesinde eğitim kodu MPS, CUDA veya otomatik cihaz seçimiyle çalışabilir. Bu altyapı ayrıştırılmasaydı deney sonuçları belirli bir donanıma veya elle değiştirilmiş konfigürasyonlara bağımlı hale gelirdi.
 
-Her çalıştırma için git commit özeti (git commit hash), konfigürasyon dosyası (config file), ödül varyantı, LR rejimi, expectile, temperature, seed, veri seti yolu (dataset path), metadata yolu (metadata path), bölme manifestosu seed'i (split manifest seed), action bin çıktısı (action bin artifact), eğitim günlükleri (training logs), kontrol noktası yolu (checkpoint path), değerlendirme çıktısı (evaluation output) ve figür yolları (figure paths) kaydedilmelidir. Çalıştırma isimlendirme (run naming) şablonu ödül, LR rejimi, IQL ayarı ve seed bilgisini birlikte taşıyan `iql\_reward\_lr\_setting\_seed' biçimindedir. Örneğin SOFA-biçimli, actor-conservative, baseline ve seed 42 bilgileri aynı çalıştırma adında saklanır. Bu sözleşme tutulmasaydı sonradan hangi kontrol noktasının hangi veri ve konfigürasyonla üretildiği izlenemezdi.
+Her çalıştırma için git commit özeti, konfigürasyon dosyası, ödül varyantı, LR rejimi, expectile, temperature, seed, veri seti yolu, metadata yolu, bölme manifestosu seed'i, action bin çıktısı, eğitim günlükleri, kontrol noktası yolu, değerlendirme çıktısı ve figür yolları kaydedilmelidir. Çalıştırma isimlendirme şablonu ödül, LR rejimi, IQL ayarı ve seed bilgisini birlikte taşıyan `iql\_reward\_lr\_setting\_seed' biçimindedir. Örneğin SOFA-biçimli, actor-conservative, baseline ve seed 42 bilgileri aynı çalıştırma adında saklanır. Bu sözleşme tutulmasaydı sonradan hangi kontrol noktasının hangi veri ve konfigürasyonla üretildiği izlenemezdi.
 
 \section{Sınırlar ve Etik Değerlendirme}
-Bu çalışma retrospektif ve gözlemseldir (observational); öğrenilen politika yatak başı tedavi önerisi değildir. Durum vektörü gizli klinik şiddeti, kontrendikasyonları, hekim niyetini ve ölçülmeyen karıştırıcılık etkilerini tam kapsamaz. Gerçek klinik süreç kısmi gözlemlenebilir Markov karar sürecine (partially observable Markov decision process, POMDP)'ye daha yakındır; model hekimin tüm yatak başı bilgisini görmez. Klinisyen aksiyonları (clinician actions) da karıştırıcılık taşır: daha ağır hastalara daha agresif vazopresör verilmesi, tedaviyi zararlı gösterebilir veya yanlış fayda atfı üretebilir.
+Bu çalışma retrospektif ve gözlemseldir; öğrenilen politika yatak başı tedavi önerisi değildir. Durum vektörü gizli klinik şiddeti, kontrendikasyonları, hekim niyetini ve ölçülmeyen karıştırıcılık etkilerini tam kapsamaz. Gerçek klinik süreç POMDP'ye daha yakındır; model hekimin tüm yatak başı bilgisini görmez. Klinisyen aksiyonları da karıştırıcılık taşır: daha ağır hastalara daha agresif vazopresör verilmesi, tedaviyi zararlı gösterebilir veya yanlış fayda atfı üretebilir.
 
-MIMIC-IV verisi PhysioNet credentialing, CITI training ve Data Use Agreement kapsamındaki yükümlülüklere tabidir; hasta verileri kimliksizleştirilmiş olsa da raporlama akademik ve etik sınırlar içinde kalmalıdır. FQE ve WIS prospektif klinik kanıt (prospective clinical evidence) değildir; fonksiyon yaklaşımı, davranış politikası (behavior policy) tahmini, destek varsayımları ve varyans profiline (variance profile) bağlıdır. ESS değerinin 50 eşiğinin altında kalması ve patient-level bootstrap resampling sayısının sınırlı olması nedeniyle final politika sonucu klinik performans kanıtı olarak yorumlanmamalıdır.
+MIMIC-IV verisi PhysioNet credentialing, CITI training ve Data Use Agreement kapsamındaki yükümlülüklere tabidir; hasta verileri kimliksizleştirilmiş olsa da raporlama akademik ve etik sınırlar içinde kalmalıdır. FQE ve WIS prospektif klinik kanıt değildir; fonksiyon yaklaşımı, davranış politikası tahmini, destek varsayımları ve varyans profiline bağlıdır. ESS değerinin 50 eşiğinin altında kalması ve patient-level bootstrap sayısının sınırlı olması nedeniyle final politika sonucu klinik performans kanıtı olarak yorumlanmamalıdır.
 
 \section{Sonuç}
-IQL final sweep iş akışı, sepsis dozaj politikalarını tek seferlik bir model çıktısı olarak değil, denetlenebilir bir çevrimdışı değerlendirme protokolü olarak ele alır. Kohort seçimi, zaman penceresi, state/action/reward mühendisliği, sızıntısız ön işleme (leakage-free preprocessing), IQL eğitimi, hyperparameter grid, Aşama 1 finalist seçimi ve Aşama 2 çoklu-seed değerlendirmesi aynı raporda izlenebilir hale gelir. Aşama 0 presweep audit geçilmiştir; Aşama 1 altı destek-duyarlı finalist üretmiştir. Aşama 2 sonucunda final konfigürasyon `iql\_sofa\_shaped\_conservative\_safe' olarak seçilir. Model FQE=2.848, WIS=8.203 ve bootstrap WIS 95\% CI=4.963--10.817 verir; ancak ESS=29.41 ile güvenilirlik eşiğinin altındadır. Bu nedenle sonuç klinik performans kanıtı değil, metodolojik ve retrospektif OPE kanıtıdır.
+IQL nihai deney taraması, sepsis dozaj politikalarını tek seferlik bir model çıktısı olarak değil, denetlenebilir bir çevrimdışı değerlendirme protokolü olarak ele alır. Kohort seçimi, zaman penceresi, state/action/reward mühendisliği, sızıntısız ön işleme, IQL eğitimi, hyperparameter grid, Aşama 1 finalist seçimi ve Aşama 2 çoklu-seed değerlendirmesi aynı raporda izlenebilir hale gelir. Aşama 0 ön denetim geçilmiştir; Aşama 1 altı destek-duyarlı finalist üretmiştir. Aşama 2 sonucunda SOFA-biçimli ödül, konservatif öğrenme oranı ve güvenli IQL ayarına sahip final model seçilir. Model FQE=2.848, WIS=8.203 ve bootstrap WIS 95\% CI=4.963--10.817 verir; ancak ESS=29.41 ile güvenilirlik eşiğinin altındadır. Bu nedenle sonuç klinik performans kanıtı değil, metodolojik ve retrospektif OPE kanıtıdır.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
