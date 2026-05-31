@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex iql_final_ieee_report"] 1780221402.92366 "iql_final_ieee_report.aux" "iql_final_ieee_report.bbl" "iql_final_ieee_report" 1780221404.08909 0
+["bibtex iql_final_ieee_report.tex"] 1780221378.03326 "iql_final_ieee_report.tex.aux" "iql_final_ieee_report.tex.bbl" "iql_final_ieee_report.tex" 1780221379.13218 0
   "./references.bib" 1780182152.10588 6362 e73f318bfecc3db9a42e79974c3170f9 ""
   "/usr/share/texlive/texmf-dist/bibtex/bst/ieeetran/IEEEtran.bst" 1440712899 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "iql_final_ieee_report.aux" 1780221403.94505 10844 e1197ac2b5f7b1e2682b0ce8167ca497 "pdflatex"
+  "iql_final_ieee_report.tex.aux" 1780221378.9927 10844 e1197ac2b5f7b1e2682b0ce8167ca497 "pdflatex"
   (generated)
-  "iql_final_ieee_report.bbl"
-  "iql_final_ieee_report.blg"
+  "iql_final_ieee_report.tex.bbl"
+  "iql_final_ieee_report.tex.blg"
   (rewritten before read)
-["pdflatex"] 1780221402.96803 "iql_final_ieee_report.tex" "iql_final_ieee_report.pdf" "iql_final_ieee_report" 1780221404.08923 0
+["pdflatex"] 1780221378.07962 "iql_final_ieee_report.tex.bak" "iql_final_ieee_report.tex.pdf" "iql_final_ieee_report.tex" 1780221379.13231 0
   "/etc/texmf/web2c/texmf.cnf" 1765102295.13848 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -124,11 +124,11 @@
   "figures/pareto_frontier.png" 1780178294.70077 142033 f8d95bf549843330555df8c5a02a1e03 ""
   "figures/seed_variance.png" 1780157546.63387 50354 0ce192a175c39eb57821fb2e7d548ce2 ""
   "figures/subgroup_safety.png" 1780178294.69677 36016 ed918bec6c263d45955b6e0fc0620a0b ""
-  "iql_final_ieee_report.aux" 1780221403.94505 10844 e1197ac2b5f7b1e2682b0ce8167ca497 "pdflatex"
-  "iql_final_ieee_report.bbl" 1780221402.96104 4539 f50bf7a66d24e2107802567a1c842226 "bibtex iql_final_ieee_report"
-  "iql_final_ieee_report.tex" 1780221396.72095 49595 0608b83f691ff6dc3dddb0b476951a1d ""
+  "iql_final_ieee_report.tex.aux" 1780221378.9927 10844 e1197ac2b5f7b1e2682b0ce8167ca497 "pdflatex"
+  "iql_final_ieee_report.tex.bak" 1780181282.36592 49595 0608b83f691ff6dc3dddb0b476951a1d ""
+  "iql_final_ieee_report.tex.bbl" 1780221378.07269 4539 f50bf7a66d24e2107802567a1c842226 "bibtex iql_final_ieee_report.tex"
   (generated)
-  "iql_final_ieee_report.aux"
-  "iql_final_ieee_report.log"
-  "iql_final_ieee_report.pdf"
+  "iql_final_ieee_report.tex.aux"
+  "iql_final_ieee_report.tex.log"
+  "iql_final_ieee_report.tex.pdf"
   (rewritten before read)
