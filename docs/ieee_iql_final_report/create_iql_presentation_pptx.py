@@ -2,306 +2,208 @@ from pathlib import Path
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 
-OUT = Path("iql_final_presentation.pptx")
-FIG = Path("figures")
+OUT = Path('iql_final_presentation.pptx')
+FIG = Path('figures')
 
 prs = Presentation()
-prs.slide_width = Inches(13.333)
+prs.slide_width = Inches(13.333333)
 prs.slide_height = Inches(7.5)
-
-INK = RGBColor(17, 19, 22)
-PAPER = RGBColor(244, 240, 229)
-SIGNAL = RGBColor(226, 61, 40)
-MINT = RGBColor(147, 217, 200)
-STEEL = RGBColor(98, 113, 122)
-WHITE = RGBColor(255, 255, 255)
 
 W = prs.slide_width
 H = prs.slide_height
 
+BG = RGBColor(7, 17, 31)
+PANEL = RGBColor(10, 31, 52)
+CYAN = RGBColor(63, 245, 255)
+MAGENTA = RGBColor(255, 60, 172)
+LIME = RGBColor(217, 255, 88)
+INK = RGBColor(232, 251, 255)
+MUTED = RGBColor(150, 180, 194)
+WHITE = RGBColor(255, 255, 255)
 
-def rgb_fill(shape, color, transparency=0):
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = color
-    shape.fill.transparency = transparency
-    shape.line.color.rgb = INK
-    shape.line.width = Pt(1)
+TITLE_FONT = 'Aptos Display'
+BODY_FONT = 'Aptos'
 
 
-def add_bg(slide, kicker):
-    bg = slide.background.fill
-    bg.solid()
-    bg.fore_color.rgb = PAPER
-    # Border frame
-    frame = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.22), Inches(0.22), W - Inches(0.44), H - Inches(0.44))
-    frame.fill.background()
-    frame.line.color.rgb = RGBColor(185, 179, 165)
-    frame.line.width = Pt(1)
-    # Signal corner tag
-    tag = slide.shapes.add_textbox(Inches(9.55), Inches(0.38), Inches(3.25), Inches(0.28))
-    p = tag.text_frame.paragraphs[0]
-    p.text = kicker.upper()
-    p.alignment = PP_ALIGN.RIGHT
-    r = p.runs[0]
-    r.font.name = "Space Mono"
-    r.font.size = Pt(8.5)
-    r.font.bold = True
-    r.font.color.rgb = SIGNAL
+def blank():
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    slide.background.fill.solid()
+    slide.background.fill.fore_color.rgb = BG
+    add_grid(slide)
     return slide
 
 
-def textbox(slide, text, x, y, w, h, size=20, color=INK, bold=False, font="Nunito", align=PP_ALIGN.LEFT):
+def add_grid(slide):
+    # Abstract cyber grid / atmosphere.
+    for i in range(0, 18):
+        x = Inches(i * 0.78)
+        line = slide.shapes.add_connector(1, x, 0, x, H)
+        line.line.color.rgb = RGBColor(18, 53, 72)
+        line.line.transparency = 70
+        line.line.width = Pt(0.35)
+    for i in range(0, 11):
+        y = Inches(i * 0.75)
+        line = slide.shapes.add_connector(1, 0, y, W, y)
+        line.line.color.rgb = RGBColor(18, 53, 72)
+        line.line.transparency = 75
+        line.line.width = Pt(0.35)
+    orb = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(10.1), Inches(5.05), Inches(2.8), Inches(2.8))
+    orb.fill.solid(); orb.fill.fore_color.rgb = MAGENTA; orb.fill.transparency = 70
+    orb.line.fill.background()
+    orb2 = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(-0.5), Inches(0.25), Inches(2.3), Inches(2.3))
+    orb2.fill.solid(); orb2.fill.fore_color.rgb = CYAN; orb2.fill.transparency = 78
+    orb2.line.fill.background()
+
+
+def text_box(slide, text, x, y, w, h, size=24, color=INK, bold=False, font=BODY_FONT, align=PP_ALIGN.LEFT):
     box = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
     tf = box.text_frame
     tf.clear()
     tf.word_wrap = True
-    tf.margin_left = 0
-    tf.margin_right = 0
-    tf.margin_top = 0
-    tf.margin_bottom = 0
-    tf.vertical_anchor = MSO_ANCHOR.TOP
     p = tf.paragraphs[0]
-    p.text = text
     p.alignment = align
-    r = p.runs[0]
-    r.font.name = font
-    r.font.size = Pt(size)
-    r.font.bold = bold
-    r.font.color.rgb = color
+    run = p.add_run()
+    run.text = text
+    run.font.name = font
+    run.font.size = Pt(size)
+    run.font.bold = bold
+    run.font.color.rgb = color
     return box
 
 
-def title(slide, text, x=0.75, y=1.05, w=5.6, h=1.6, size=34):
-    box = textbox(slide, text.upper(), x, y, w, h, size=size, bold=True, font="Archivo")
-    box.text_frame.paragraphs[0].line_spacing = 0.88
-    return box
+def eyebrow(slide, text, x=0.75, y=0.55):
+    return text_box(slide, text.upper(), x, y, 5.7, 0.35, size=10.5, color=CYAN, bold=True)
 
 
-def eyebrow(slide, text, x=0.75, y=0.78, w=5.8):
-    return textbox(slide, text.upper(), x, y, w, 0.25, size=9, color=SIGNAL, bold=True, font="Space Mono")
+def title(slide, text, x=0.75, y=1.2, w=5.7, h=1.5, size=34):
+    return text_box(slide, text, x, y, w, h, size=size, color=INK, bold=True, font=TITLE_FONT)
 
 
-def body(slide, text, x, y, w, h, size=14, color=INK):
-    return textbox(slide, text, x, y, w, h, size=size, color=color, font="Nunito")
+def body(slide, text, x, y, w, h, size=15, color=MUTED):
+    return text_box(slide, text, x, y, w, h, size=size, color=color)
 
 
-def bullet_box(slide, items, x, y, w, h, fill=WHITE):
-    rect = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
-    rgb_fill(rect, fill, 18 if fill == WHITE else 0)
-    tf = rect.text_frame
-    tf.clear()
-    tf.margin_left = Inches(0.22)
-    tf.margin_right = Inches(0.18)
-    tf.margin_top = Inches(0.18)
-    tf.margin_bottom = Inches(0.12)
-    for i, item in enumerate(items):
-        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-        p.text = f"■ {item}"
-        p.level = 0
-        p.font.name = "Nunito"
-        p.font.size = Pt(13)
-        p.font.color.rgb = INK
-        p.space_after = Pt(7)
-        p.line_spacing = 1.08
-    return rect
+def panel(slide, x, y, w, h, accent=CYAN):
+    shp = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+    shp.fill.solid(); shp.fill.fore_color.rgb = PANEL; shp.fill.transparency = 8
+    shp.line.color.rgb = accent; shp.line.transparency = 30; shp.line.width = Pt(1.0)
+    return shp
 
 
-def metric(slide, value, label, x, y, w=1.55, h=0.72, fill=WHITE):
-    box = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
-    rgb_fill(box, fill, 12 if fill == WHITE else 0)
+def metric(slide, x, y, w, h, value, label, accent=CYAN):
+    panel(slide, x, y, w, h, accent)
+    text_box(slide, value, x + 0.18, y + 0.15, w - 0.36, h * 0.45, size=25, color=INK, bold=True, font=TITLE_FONT)
+    body(slide, label, x + 0.18, y + h * 0.57, w - 0.36, h * 0.32, size=10.5, color=MUTED)
+
+
+def bullets(slide, items, x, y, w, h, size=15):
+    box = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
     tf = box.text_frame
-    tf.clear()
-    tf.margin_left = Inches(0.08)
-    tf.margin_top = Inches(0.08)
-    p = tf.paragraphs[0]
-    p.text = str(value)
-    p.font.name = "Archivo"
-    p.font.bold = True
-    p.font.size = Pt(22)
-    p.font.color.rgb = SIGNAL
-    p2 = tf.add_paragraph()
-    p2.text = label.upper()
-    p2.font.name = "Space Mono"
-    p2.font.bold = True
-    p2.font.size = Pt(7)
-    p2.font.color.rgb = STEEL
+    tf.clear(); tf.word_wrap = True
+    for idx, item in enumerate(items):
+        p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+        p.text = item
+        p.level = 0
+        p.font.name = BODY_FONT
+        p.font.size = Pt(size)
+        p.font.color.rgb = INK
+        p.space_after = Pt(8)
+        p.bullet = True
     return box
 
 
-def image_slide(kicker, heading, image_name, caption, note=None):
-    s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), kicker)
-    eyebrow(s, kicker)
-    title(s, heading, size=31, w=4.6)
-    if note:
-        body(s, note, 0.8, 2.7, 4.25, 1.1, size=13, color=STEEL)
-    img_path = FIG / image_name
-    if img_path.exists():
-        s.shapes.add_picture(str(img_path), Inches(5.55), Inches(1.05), width=Inches(6.9), height=Inches(5.2))
-    textbox(s, caption.upper(), 5.55, 6.35, 6.9, 0.22, size=8, color=STEEL, bold=True, font="Space Mono")
-    return s
+def image_slide(kicker, headline, desc, img, caption):
+    s = blank(); eyebrow(s, kicker); title(s, headline, y=1.05, w=4.6, h=1.75, size=29)
+    body(s, desc, 0.75, 3.05, 4.35, 1.15, 14)
+    panel(s, 5.35, 0.82, 7.25, 5.75, CYAN)
+    s.shapes.add_picture(str(FIG / img), Inches(5.55), Inches(1.05), width=Inches(6.85), height=Inches(4.85))
+    body(s, caption, 5.55, 6.05, 6.85, 0.35, 10.5)
+
 
 # 1
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Offline RL / Sepsis")
-eyebrow(s, "MIMIC-IV + IQL")
-title(s, "Sepsis Dozaj Politikaları", w=5.1, h=2.0, size=37)
-body(s, "Destek sınırlı klinik koşullarda çevrimdışı pekiştirmeli öğrenme iş akışı.", 0.8, 3.45, 5.3, 0.8, 16, STEEL)
-card = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.7), Inches(1.25), Inches(5.25), Inches(3.4))
-rgb_fill(card, SIGNAL)
-body(s, "Final aday", 7.05, 1.62, 4.7, 0.35, 18, WHITE)
-body(s, "iql_sofa_shaped_conservative_safe", 7.05, 2.15, 4.7, 0.55, 18, WHITE)
-metric(s, "2.848", "FQE", 7.05, 3.2, fill=WHITE)
-metric(s, "8.203", "WIS", 8.82, 3.2, fill=WHITE)
-metric(s, "29.41", "ESS", 10.58, 3.2, fill=WHITE)
+s = blank(); eyebrow(s, 'IEEE final report sunumu'); title(s, 'Destek sınırlı sepsis dozaj politikaları', y=1.15, w=5.9, h=1.9, size=36)
+body(s, 'IQL tabanlı, sızıntısız ve denetlenebilir bir çevrimdışı pekiştirmeli öğrenme iş akışı.', 0.75, 3.35, 5.45, 0.85, 15.5, RGBColor(198, 233, 242))
+metric(s, 7.0, 1.15, 2.2, 1.15, '72s', 'akut gözlem penceresi')
+metric(s, 9.45, 1.15, 2.2, 1.15, '62', 'boyutlu durum vektörü', MAGENTA)
+metric(s, 7.0, 2.65, 2.2, 1.15, '25', 'sıvı-vazopresör aksiyonu', LIME)
+metric(s, 9.45, 2.65, 2.2, 1.15, '30', 'final eğitim koşusu')
+body(s, 'MIMIC-IV v3.1 / Offline RL', 0.75, 6.75, 3.4, 0.25, 10, CYAN)
 
 # 2
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Problem")
-eyebrow(s, "Neden zor?")
-title(s, "Klinik veri destek sınırı taşır", w=4.9)
-bullet_box(s, ["Sepsis kararları gecikmeli mortalite sonucuna bağlanır.", "Daha ağır hastalar daha agresif tedavi aldığı için confounding oluşur.", "Çevrimdışı RL hastada keşif yapmaz; yalnız tarihsel yörüngeleri kullanır.", "Desteksiz sıvı-vazopresör kombinasyonları klinik olarak güvenilmezdir."], 6.0, 1.35, 5.9, 3.5)
-textbox(s, "01", 9.3, 4.7, 2.7, 1.25, size=72, color=RGBColor(232, 164, 152), bold=True, font="Archivo")
+s = blank(); eyebrow(s, 'Problem'); title(s, 'Gözlemsel veride iyi görünen politika güvenli olmayabilir.', y=1.05, w=5.2, h=2.0, size=30)
+body(s, 'Sepsiste agresif müdahale genellikle daha ağır hastalarda gözlenir; değer tahmini destek eksikliğiyle kolayca yanılır.', 0.75, 3.3, 4.9, 1.0, 14.5)
+items = [('Ekstrapolasyon', 'Zayıf temsil edilen doz kombinasyonlarına yapay değer atanabilir.'), ('OPE varyansı', 'WIS birkaç yüksek ağırlıklı yörüngeye yaslanabilir.'), ('Sızıntı riski', 'Ön işleme veya split hatası final metriği şişirir.'), ('Klinik sınır', 'Çalışma yatak başı öneri değil, retrospektif protokoldür.')]
+for i, (h, d) in enumerate(items):
+    x = 6.35 + (i % 2) * 3.0; y = 1.05 + (i // 2) * 2.0
+    panel(s, x, y, 2.65, 1.55, CYAN if i % 2 == 0 else MAGENTA)
+    text_box(s, h, x + .18, y + .17, 2.3, .35, 16, INK, True, TITLE_FONT)
+    body(s, d, x + .18, y + .65, 2.25, .65, 11.5)
 
 # 3
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Mimari")
-eyebrow(s, "10 adımlı protokol")
-title(s, "Model değil, denetlenebilir iş akışı", w=6.7, size=31)
-steps = ["Kohort\nSepsis-3", "72 saat\n4 saatlik adım", "Patient split\ntrain-only fit", "62 boyutlu\nstate", "5x5 action\niki reward", "Replay\nbaseline", "IQL\neğitim", "OPE\nFQE/WIS/ESS", "Güvenlik\nteşhisleri", "Final sweep\nartifact"]
+s = blank(); eyebrow(s, 'Uçtan uca mimari'); title(s, 'Tek model değil, denetlenebilir deney hattı.', y=.95, w=7.5, h=.9, size=30)
+steps = ['Sepsis-3 kohort', '72 saat / 4 saatlik karar', 'Hasta düzeyinde split', '62 özellikli durum', '25 aksiyon + ödül', 'Replay + baseline', 'IQL eğitimi', '18 aday tarama', 'OPE ve güvenlik', 'Çoklu tohum final']
 for i, st in enumerate(steps):
-    x = 0.8 + (i % 5) * 2.42
-    y = 3.05 + (i // 5) * 1.35
-    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(2.05), Inches(1.02))
-    rgb_fill(box, WHITE, 25)
-    textbox(s, str(i+1), x+0.1, y+0.1, 0.35, 0.25, size=15, color=SIGNAL, bold=True, font="Archivo")
-    body(s, st, x+0.48, y+0.16, 1.42, 0.6, size=10)
+    x = .75 + (i % 5) * 2.45; y = 2.15 + (i // 5) * 1.75
+    panel(s, x, y, 2.15, 1.25, CYAN if i < 5 else MAGENTA)
+    text_box(s, f'{i+1:02d}', x + .16, y + .12, .7, .32, 18, CYAN, True, TITLE_FONT)
+    body(s, st, x + .16, y + .55, 1.8, .45, 11.3, INK)
 
 # 4
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "MDP")
-eyebrow(s, "Formülasyon")
-title(s, "Sonlu ufuklu karar süreci", w=5.2)
-body(s, "Her geçiş hasta durumunu, 25 ayrık tedavi aksiyonunu ve terminal/ara ödülü taşır.", 0.8, 2.75, 5.0, 0.8, 15, STEEL)
-code = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.05), Inches(1.35), Inches(5.6), Inches(1.3))
-rgb_fill(code, INK)
-body(s, "M = (S, A, P, R, gamma)\n(s_t, a_t, r_t, s_{t+1}, done_t)", 6.32, 1.62, 5.0, 0.75, 16, MINT)
-metric(s, "62", "state feature", 6.05, 3.1)
-metric(s, "25", "action bin", 7.92, 3.1)
-metric(s, "0.99", "gamma", 9.8, 3.1)
+s = blank(); eyebrow(s, 'MDP formülasyonu'); title(s, 'Karar birimi: 4 saatlik klinik pencere.', y=1.0, w=4.8, h=1.6, size=31)
+panel(s, 6.0, .95, 6.45, 5.1, CYAN)
+bullets(s, ['Durum: vital, laboratuvar, tedavi geçmişi, demografi ve missingness sinyalleri.', 'Aksiyon: vazopresör ve IV sıvı binlerinin 5 x 5 ayrık kombinasyonu.', 'Ödül: terminal sağkalım/ölüm faydası ve opsiyonel SOFA şekillendirmesi.', 'İskonto: gamma = 0.99 ile uzun vadeli mortalite etkisi korunur.', 'Sızıntı önlemi: binler ve ön işleme yalnız eğitim bölmesinde fit edilir.'], 6.35, 1.35, 5.7, 4.2, 14)
 
-# 5 action grid
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Action Space")
-eyebrow(s, "Sıvı x Vazopresör")
-title(s, "25 ayrık tedavi kutusu", w=5.0)
-bullet_box(s, ["Bin 0: tedavi yok.", "Sıfır dışı dozlar eğitim bölmesi çeyreklikleriyle Q1-Q4.", "Eşikler train üzerinde öğrenilir, validation/test üzerinde dondurulur."], 0.82, 3.2, 4.7, 2.0)
-for r in range(5):
-    for c in range(5):
-        idx = r*5+c
-        x, y = 6.35 + c*0.82, 1.34 + r*0.82
-        cell = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(0.68), Inches(0.68))
-        rgb_fill(cell, RGBColor(250, 220, 214) if idx in (0, 6, 12, 18, 24) else WHITE, 8)
-        textbox(s, str(idx), x+0.16, y+0.2, 0.35, 0.2, size=13, color=INK, bold=True, font="Archivo", align=PP_ALIGN.CENTER)
+image_slide('Aşama 1', 'Değer tek başına seçici değil; destekle birlikte okunur.', 'SOFA-konservatif adaylar öne çıktı; final havuzu tek metriğe aşırı uyumu engellemek için çeşitlendirildi.', 'fqe_vs_support.png', 'Yüksek FQE ancak yeterli davranış desteğiyle anlamlı kabul edilir.')
 
-# 6 rewards
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Rewards")
-eyebrow(s, "Ödül tasarımı")
-title(s, "Seyrek sonuca SOFA şekillendirmesi eklenir", w=6.4, size=30)
-for x, h, t in [(0.9, "Sparse", "90 gün sağkalım +15, 90 gün mortalite -15."), (4.65, "SOFA-shaped", "Terminal fayda korunur; ara adımlarda SOFA değişimi küçük sinyal üretir."), (8.4, "Kontrol", "Shaping mortalite hedefinin yerini almaz; final seçim ortak terminal değerlendirmeye bağlanır.")]:
-    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(3.1), Inches(3.25), Inches(1.75))
-    rgb_fill(box, WHITE, 20)
-    textbox(s, h, x+0.2, 3.32, 2.8, 0.35, size=18, bold=True, font="Archivo")
-    body(s, t, x+0.2, 3.9, 2.8, 0.8, 12)
+# 6
+s = blank(); eyebrow(s, 'IQL tarama tasarımı'); title(s, '18 adaydan 6 finalist, sonra 3 tohumla tekrar ölçüm.', y=1.0, w=6.0, h=1.4, size=30)
+cols = [('Ödül', 'Sparse / SOFA', 'Terminal mortalite sinyali SOFA değişimiyle veya yalnız başına değerlendirilir.'), ('LR rejimi', 'Konservatif / referans / aktör-konservatif', 'Eleştirmen ve aktör agresifliği destek sınırları açısından ayrıştırılır.'), ('IQL ayarı', 'Güvenli / referans / iyimser', 'Ekspektil ve sıcaklık politika çıkarımının risk profilini kontrol eder.')]
+for i, (k, h, d) in enumerate(cols):
+    x = .9 + i * 4.1
+    panel(s, x, 3.05, 3.55, 2.3, [CYAN, MAGENTA, LIME][i])
+    text_box(s, k.upper(), x + .22, 3.28, 2.8, .25, 10, [CYAN, MAGENTA, LIME][i], True)
+    text_box(s, h, x + .22, 3.72, 3.0, .65, 18, INK, True, TITLE_FONT)
+    body(s, d, x + .22, 4.55, 3.05, .55, 11.8)
 
-# 7 IQL
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "IQL")
-eyebrow(s, "Algoritma seçimi")
-title(s, "IQL veri dışı aksiyon maksimumu almaz", w=5.7, size=31)
-bullet_box(s, ["Value: expectile regression ile veri içindeki yüksek değerli aksiyonlara yaklaşır.", "Q: öğrenilen state-value hedefiyle güncellenir.", "Actor: avantaj ağırlıklı davranış klonlama ile politika çıkarır.", "Temperature arttıkça getiri potansiyeli ve destek dışına kayma riski birlikte artar."], 6.0, 1.45, 5.9, 3.5)
-textbox(s, "IQL", 8.4, 4.9, 3.4, 1.0, size=72, color=RGBColor(232, 164, 152), bold=True, font="Archivo")
+image_slide('Aşama 2', 'Final seçim Pareto ödünleşiminden gelir.', 'Seçili yapı: iql_sofa_shaped_conservative_safe. Karar FQE/WIS değerlerini ESS, destek ve klinisyen uyumuyla birlikte tartar.', 'pareto_frontier.png', 'Değer, destek ve güvenlik eksenleri birlikte final kararı belirler.')
 
-# 8 sweep
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Sweep")
-eyebrow(s, "Final tarama")
-title(s, "18 aday, 6 finalist, 3 tohum", w=6.5)
-items = [("2 ödül", "Sparse ve SOFA-shaped aynı terminal değerlendirme altında karşılaştırıldı."), ("3 LR rejimi", "Konservatif, referans ve aktör-konservatif optimizasyon."), ("3 IQL ayarı", "Güvenli, referans ve iyimser expectile-temperature çiftleri."), ("3 seed", "Finalistler 42, 123 ve 456 tohumlarıyla yeniden ölçüldü.")]
-for i, (h, t) in enumerate(items):
-    x = 0.9 + (i % 2) * 5.5
-    y = 3.05 + (i // 2) * 1.35
-    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(4.75), Inches(1.0))
-    rgb_fill(box, WHITE, 22)
-    textbox(s, h, x+0.18, y+0.14, 1.5, 0.3, size=15, bold=True, font="Archivo")
-    body(s, t, x+1.72, y+0.14, 2.75, 0.55, 10.5)
+# 8
+s = blank(); eyebrow(s, 'Final test sonuçları'); title(s, 'Metodolojik kanıt güçlü; klinik üstünlük iddiası yok.', y=1.0, w=5.1, h=1.6, size=30)
+body(s, 'ESS 50 eşiğinin altında olduğu için sonuçlar prospektif performans kanıtı olarak değil, destek sınırları tanımlı OPE kanıtı olarak yorumlanır.', .75, 3.0, 4.8, 1.0, 14)
+metrics = [('2.848','FQE'),('8.203','WIS'),('29.41','ESS'),('0.991','davranışsal destek'),('0.414','klinisyen tam-kutu uyumu'),('4.963-10.817','WIS %95 CI')]
+for i,(v,l) in enumerate(metrics):
+    x = 6.15 + (i % 2) * 2.9; y = .9 + (i // 2) * 1.55
+    metric(s, x, y, 2.55, 1.12, v, l, [CYAN, MAGENTA, LIME][i % 3])
 
-# 9 stage 1
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Stage 1")
-eyebrow(s, "Finalist seçimi")
-title(s, "Yüksek değer tek başına yeterli değil", w=5.4, size=31)
-body(s, "Seçim FQE/WIS ile destek, uyum, düşük destek uyarısı ve çeşitlilik slotlarını birlikte okur.", 0.82, 2.95, 4.85, 0.9, 14, STEEL)
-rows = [["Aday", "FQE", "WIS", "Destek"], ["SOFA conservative safe", "3.169", "8.616", "0.965"], ["SOFA conservative baseline", "2.280", "7.009", "0.973"], ["Sparse conservative safe", "1.954", "8.740", "0.971"], ["Sparse baseline safe", "2.345", "8.125", "0.963"]]
-table = s.shapes.add_table(len(rows), 4, Inches(5.8), Inches(1.55), Inches(6.35), Inches(2.7)).table
-for r, row in enumerate(rows):
-    for c, val in enumerate(row):
-        cell = table.cell(r, c)
-        cell.text = val
-        cell.fill.solid(); cell.fill.fore_color.rgb = WHITE if r else INK
-        for p in cell.text_frame.paragraphs:
-            p.font.name = "Nunito"; p.font.size = Pt(10); p.font.bold = r == 0; p.font.color.rgb = WHITE if r == 0 else (SIGNAL if c == 3 and r else INK)
+image_slide('Baseline karşılaştırması', 'Yüksek WIS, düşük ESS ile güvenilir değildir.', 'Davranış klonlama WIS açısından yüksek görünür, fakat ESS=1.6 düzeyi nedeniyle istatistiksel olarak kırılgandır.', 'baseline_comparison.png', 'Klinisyen replay, no-treatment, davranış klonlama ve seçili IQL birlikte okunur.')
+image_slide('Aksiyon güvenliği', 'Politika hekimden sapıyor, fakat veri desteği içinde kalıyor.', 'Desteklenmeyen aksiyon sapması 0.009 düzeyinde; farklı kararlar çoğunlukla gözlenmiş makul komşu kutularda kalır.', 'action_heatmap.png', '5 x 5 tedavi gridi sıvı ve vazopresör şiddetini birlikte kodlar.')
 
-# images slides
-image_slide("Evidence", "Değer ve destek birlikte raporlanır", "fqe_vs_support.png", "FQE vs support", "Yüksek değer tahminleri destek kütlesiyle birlikte yorumlanır.")
+# 11
+s = blank(); eyebrow(s, 'Sınırlar ve etik'); title(s, 'Retrospektif model, klinik karar destek sistemi değildir.', y=1.0, w=5.4, h=1.5, size=30)
+panel(s, 6.1, .95, 6.2, 4.9, MAGENTA)
+bullets(s, ['Durum vektörü hekim niyetini, kontrendikasyonları ve tüm yatak başı gözlemleri kapsamaz.', 'MIMIC-IV kullanımı credentialing, CITI eğitimi ve veri kullanım sözleşmesi yükümlülüklerine tabidir.', 'FQE/WIS prospektif klinik kanıt değil; model ve davranış politikası varsayımlarına bağlıdır.', 'Düşük ESS, bootstrap aralığı ve gözlemsel confounding temkinli raporlama gerektirir.'], 6.45, 1.45, 5.45, 3.8, 14)
 
-# 11 stage 2 table
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Stage 2")
-eyebrow(s, "Üç tohumlu sonuç")
-title(s, "Final: SOFA + konservatif + güvenli", w=6.5, size=31)
-rows = [["Sıra", "Konfigürasyon", "Skor", "FQE", "WIS", "ESS", "Uyum"], ["1", "SOFA konservatif güvenli", "5.858", "2.848", "8.203", "29.41", "0.414"], ["2", "SOFA konservatif referans", "5.288", "2.366", "8.286", "26.12", "0.404"], ["3", "Sparse konservatif güvenli", "5.262", "2.316", "8.169", "31.32", "0.411"], ["4", "Sparse konservatif referans", "5.033", "2.050", "8.536", "26.10", "0.401"]]
-table = s.shapes.add_table(len(rows), 7, Inches(0.82), Inches(3.0), Inches(11.75), Inches(2.1)).table
-for r, row in enumerate(rows):
-    for c, val in enumerate(row):
-        cell = table.cell(r, c); cell.text = val
-        cell.fill.solid(); cell.fill.fore_color.rgb = WHITE if r else INK
-        for p in cell.text_frame.paragraphs:
-            p.font.name = "Nunito"; p.font.size = Pt(8.5); p.font.bold = r == 0; p.font.color.rgb = WHITE if r == 0 else (SIGNAL if c in (2, 5) and r else INK)
+# 12
+s = blank(); eyebrow(s, 'Gelecek yönler'); title(s, 'Sonraki adım daha büyük grid değil, belirsizlik duyarlı öğrenme.', y=.95, w=5.5, h=1.7, size=29)
+items = [('Dinamik ekspektil', 'Yoğun destek bölgelerinde agresif, seyrek bölgelerde davranışa yakın politika çıkarımı.'), ('Multi-step izler', 'Seyrek terminal mortalite sinyalini daha hızlı ve destek-duyarlı yayma.'), ('Manifold düzenleme', 'Gerçekçi sınır durumlarıyla değer fonksiyonuna güvenli marjlar öğretme.'), ('Risk modelleri', 'Quantile tabanlı belirsizlikle yüksek riskli outlier etkisini sınırlama.')]
+for i, (h, d) in enumerate(items):
+    x = 6.25 + (i % 2) * 3.0; y = 1.0 + (i // 2) * 2.05
+    panel(s, x, y, 2.65, 1.58, CYAN if i % 2 == 0 else LIME)
+    text_box(s, h, x + .18, y + .18, 2.25, .35, 15.5, INK, True, TITLE_FONT)
+    body(s, d, x + .18, y + .68, 2.25, .62, 11.5)
 
-image_slide("Baselines", "Davranış klonlama yüksek WIS üretir ama ESS çöker", "baseline_comparison.png", "Baseline comparison", "Clinician ESS=2585, BC ESS=1.6, IQL ESS=29.4.")
-image_slide("Safety", "Politika klinisyeni kopyalamaz, ama destek içinde kalır", "action_heatmap.png", "Action heatmap", "Destek kütlesi 0.991; tam-kutu uyum 0.414; desteklenmeyen sapma 0.009.")
-image_slide("Uncertainty", "CI geniş, ESS düşük", "bootstrap_ci.png", "Bootstrap WIS CI", "WIS 95% CI = 4.963--10.817. Sonuç klinik üstünlük iddiası değildir.")
+# 13
+s = blank(); eyebrow(s, 'Sonuç'); title(s, 'IQL hattı güvenli sınırları görünür kılan bir değerlendirme protokolü sunar.', y=.95, w=6.0, h=1.8, size=29)
+body(s, 'Kohorttan rapora kadar aynı protokolde izlenen süreç, sepsis dozaj politikalarını denetlenebilir ve tekrar üretilebilir biçimde karşılaştırmayı sağlar.', .75, 3.1, 5.3, .95, 14)
+panel(s, 6.7, 1.1, 5.35, 4.3, CYAN)
+bullets(s, ['Aşama 0 denetimi sızıntı ve sözleşme kontrollerini geçti.', 'Aşama 1 destek-duyarlı 6 finalist üretti.', 'Aşama 2 final konfigürasyonu çoklu tohumla doğruladı.', 'Nihai yorum: retrospektif OPE kanıtı, klinik üstünlük kanıtı değil.'], 7.05, 1.65, 4.65, 3.1, 14)
 
-# stack
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Stack")
-eyebrow(s, "Yeniden üretilebilirlik")
-title(s, "Artifact odaklı deney yığını", w=5.6)
-for i, (h, t) in enumerate([("Data", "Polars, PyArrow, Parquet ve hasta düzeyi manifestolar."), ("Training", "PyTorch, özelleştirilmiş d3rlpy, CUDA/MPS/auto cihaz seçimi."), ("Config", "Hydra, run naming, seed ve checkpoint sözleşmeleri."), ("Tracking", "MLflow, grafik paketi ve IEEE rapor artifact'leri.")]):
-    x = 6.0 + (i % 2) * 2.95
-    y = 1.55 + (i // 2) * 1.65
-    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(2.6), Inches(1.22))
-    rgb_fill(box, WHITE, 22)
-    textbox(s, h, x+0.16, y+0.15, 2.2, 0.3, size=16, bold=True, font="Archivo")
-    body(s, t, x+0.16, y+0.55, 2.18, 0.55, 9.5)
-
-# ethics
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Ethics")
-eyebrow(s, "Sınırlar")
-title(s, "Bu bir yatak başı tedavi önerisi değildir", w=5.8, size=31)
-bullet_box(s, ["Çalışma retrospektif ve gözlemseldir.", "Durum vektörü hekim niyetini ve ölçülmeyen karıştırıcıları tam kapsamaz.", "FQE/WIS prospektif klinik kanıt değildir.", "MIMIC-IV kullanımı PhysioNet, CITI ve DUA sınırları içinde kalmalıdır."], 6.0, 1.35, 5.9, 3.5)
-
-# future
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Future Work")
-eyebrow(s, "Sonraki araştırma")
-title(s, "Daha büyük grid değil, belirsizlik-duyarlı politika güncellemesi", w=7.4, size=29)
-for x, h, t in [(0.9, "Dinamik expectile", "Yoğun destekte agresif, seyrek bölgede davranışa yakın güncelleme."), (4.65, "Multi-step traces", "Seyrek terminal mortalite sinyalini yörünge boyunca daha hızlı taşıma."), (8.4, "World model", "Gerçekçi sınır durumlarını sentezleyerek değer fonksiyonuna güvenli marj öğretme.")]:
-    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(3.45), Inches(3.25), Inches(1.55))
-    rgb_fill(box, WHITE, 20)
-    textbox(s, h, x+0.18, 3.62, 2.8, 0.3, size=16, bold=True, font="Archivo")
-    body(s, t, x+0.18, 4.05, 2.8, 0.58, 10.5)
-
-# takeaway
-s = add_bg(prs.slides.add_slide(prs.slide_layouts[6]), "Takeaway")
-eyebrow(s, "Son mesaj")
-title(s, "Destek sınırı görünürse sonuç daha dürüst olur", w=5.9, size=34)
-card = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.65), Inches(1.55), Inches(5.25), Inches(2.6))
-rgb_fill(card, SIGNAL)
-body(s, "Final okuma", 7.0, 1.9, 4.6, 0.35, 18, WHITE)
-body(s, "IQL iş akışı klinik üstünlük değil; sızıntısız, destek-duyarlı, retrospektif politika dışı değerlendirme kanıtı üretir.", 7.0, 2.48, 4.5, 1.0, 16, WHITE)
+# Slide numbers
+for idx, slide in enumerate(prs.slides, start=1):
+    text_box(slide, f'{idx:02d} / {len(prs.slides):02d}', 11.55, 6.92, 1.1, .25, 9.5, MUTED, True, align=PP_ALIGN.RIGHT)
 
 prs.save(OUT)
 print(OUT.resolve())
