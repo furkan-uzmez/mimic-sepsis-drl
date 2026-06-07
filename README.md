@@ -11,6 +11,7 @@ Bu repo klinik karar destek sistemi degildir. Amaci hasta verisiyle canli etkile
 - [Veri ve Guvenlik Notlari](#veri-ve-guvenlik-notlari)
 - [Kurulum](#kurulum)
 - [Hizli Baslangic](#hizli-baslangic)
+- [Pipeline Diyagrami](#pipeline-diyagrami)
 - [Tam Veri Pipeline'i](#tam-veri-pipelinei)
 - [IQL Egitimi](#iql-egitimi)
 - [IQL Sonuclari](#iql-sonuclari)
@@ -85,6 +86,23 @@ uv run python -m mimic_sepsis_rl.training.experiment_runner --algorithm iql
 ```
 
 Beklenen basari sinyali: replay dosyalari okunur, IQL config'i raporlanir, dry-run hata vermez ve egitim artifaktlari IQL run dizinlerine yazilir.
+
+## Pipeline Diyagrami
+
+Asagidaki Mermaid diyagrami, ham MIMIC-IV dosyalarindan IQL degerlendirme ciktilarina kadar adimlari sirayla ozetler.
+
+```mermaid
+flowchart TD
+    A[Ham MIMIC-IV dosyalari] --> B[1. Kohortu uret]
+    B --> C[2. Sepsis onset uret]
+    C --> D[3. Episode grid uret]
+    D --> E[4. Train / validation / test split uret]
+    E --> F[5. State / action / reward / replay dataset uret]
+    F --> G[6. IQL konfigurasyonunu incele]
+    G --> H[7. Dry-run ile dosya yollari ve config'i dogrula]
+    H --> I[8. IQL egitimini baslat]
+    I --> J[9. OPE ve safety metrikleriyle finalist modeli sec]
+```
 
 ## Tam Veri Pipeline'i
 
