@@ -1,61 +1,61 @@
 # MIMIC Sepsis IQL Offline RL
 
-MIMIC-IV uzerinde Sepsis-3 tabanli yogun bakim kohortunu 4 saatlik MDP adimlarina donusturen ve Implicit Q-Learning (IQL) ile retrospektif offline RL politika ogrenimi yapan arastirma kod tabanidir.
+MIMIC-IV üzerinde Sepsis-3 tabanlı yoğun bakım kohortunu 4 saatlik MDP adımlarına dönüştüren ve Implicit Q-Learning (IQL) ile retrospektif offline RL politika öğrenimi yapan araştırma kod tabanıdır.
 
-Bu repo klinik karar destek sistemi degildir. Amaci hasta verisiyle canli etkilesim kurmadan, kayitli klinisyen kararlarindan veri sizintisina karsi korumali ve yeniden uretilebilir bir IQL benchmark akisi saglamaktir.
+Bu repo klinik karar destek sistemi değildir. Amacı, hasta verisiyle canlı etkileşim kurmadan kayıtlı klinisyen kararlarından, veri sızıntısına karşı korumalı ve yeniden üretilebilir bir IQL benchmark akışı sağlamaktır.
 
-## Icerik
+## İçerik
 
-- [Ozellikler](#ozellikler)
+- [Özellikler](#özellikler)
 - [Gereksinimler](#gereksinimler)
-- [Veri ve Guvenlik Notlari](#veri-ve-guvenlik-notlari)
+- [Veri ve Güvenlik Notları](#veri-ve-güvenlik-notları)
 - [Kurulum](#kurulum)
-- [Hizli Baslangic](#hizli-baslangic)
-- [Pipeline Diyagrami](#pipeline-diyagrami)
-- [Tam Veri Pipeline'i](#tam-veri-pipelinei)
-- [IQL Egitimi](#iql-egitimi)
-- [IQL Sonuclari](#iql-sonuclari)
-- [Dokumantasyon](#dokumantasyon)
+- [Hızlı Başlangıç](#hızlı-başlangıç)
+- [Pipeline Diyagramı](#pipeline-diyagramı)
+- [Tam Veri Pipeline'ı](#tam-veri-pipelineı)
+- [IQL Eğitimi](#iql-eğitimi)
+- [IQL Sonuçları](#iql-sonuçları)
+- [Dokümantasyon](#dokümantasyon)
 - [Sorun Giderme](#sorun-giderme)
-- [Gelistirme](#gelistirme)
-- [Atiflar](#atiflar)
+- [Geliştirme](#geliştirme)
+- [Atıflar](#atıflar)
 
-## Ozellikler
+## Özellikler
 
-- Sepsis-3 kriterlerine gore yetiskin ICU hasta kohortu uretimi.
-- Onset -24 saat ile +48 saat araliginda 4 saatlik episode grid olusturma.
-- `state_dim = 62` klinik ozellik ve 25 ayrik tedavi aksiyonu.
-- Aksiyonlarin 5 vazopressor bin'i x 5 IV fluid bin'i olarak yorumlanabilir sekilde kodlanmasi.
-- Hasta seviyesinde train/validation/test ayrimi ile leakage-safe preprocessing.
-- IQL icin value, critic ve actor egitimi; expectile regression ve advantage-weighted actor update akisi.
-- Sparse ve SOFA-shaped reward varyantlariyla IQL sweep, finalist secimi ve OPE/safety degerlendirmesi.
-- `uv`, Hydra, MLflow, Polars, PyArrow, scikit-learn, PyTorch ve d3rlpy tabanli tekrarlanabilir calisma ortami.
+- Sepsis-3 kriterlerine göre yetişkin ICU hasta kohortu üretimi.
+- Onset -24 saat ile +48 saat aralığında 4 saatlik episode grid oluşturma.
+- `state_dim = 62` klinik özellik ve 25 ayrık tedavi aksiyonu.
+- Aksiyonların 5 vazopressor bin'i x 5 IV fluid bin'i olarak yorumlanabilir şekilde kodlanması.
+- Hasta seviyesinde train/validation/test ayrımı ile leakage-safe preprocessing.
+- IQL için value, critic ve actor eğitimi; expectile regression ve advantage-weighted actor update akışı.
+- Sparse ve SOFA-shaped reward varyantlarıyla IQL sweep, finalist seçimi ve OPE/safety değerlendirmesi.
+- `uv`, Hydra, MLflow, Polars, PyArrow, scikit-learn, PyTorch ve d3rlpy tabanlı tekrarlanabilir çalışma ortamı.
 
 ## Gereksinimler
 
-| Gereksinim | Surum / Not |
+| Gereksinim | Sürüm / Not |
 | --- | --- |
 | Python | `>=3.12` |
-| Paket yoneticisi | `uv` |
-| Ham veri | MIMIC-IV v3.1 dosyalari |
-| Egitim runtime'i | PyTorch `2.6.0`, varsayilan index CUDA 12.4 wheel'leri |
-| Opsiyonel araclar | `snakemake`, `pytest`, `ruff`, `jupyter` dev grubunda |
+| Paket yöneticisi | `uv` |
+| Ham veri | MIMIC-IV v3.1 dosyaları |
+| Eğitim runtime'ı | PyTorch `2.6.0`, varsayılan index CUDA 12.4 wheel'leri |
+| Opsiyonel araçlar | `snakemake`, `pytest`, `ruff`, `jupyter` dev grubunda |
 
-Bagimlilikler `pyproject.toml` ve `uv.lock` ile sabitlenir. Kurulumda manuel paket listesi yerine `uv sync` kullanin.
+Bağımlılıklar `pyproject.toml` ve `uv.lock` ile sabitlenir. Kurulumda manuel paket listesi yerine `uv sync` kullanın.
 
-## Veri ve Guvenlik Notlari
+## Veri ve Güvenlik Notları
 
-- Bu repo hasta verisi barindirmaz.
-- MIMIC-IV kullanimi icin PhysioNet uzerinden yetkili erisim ve gerekli CITI egitimi gerekir.
-- Ham veri su dizinde beklenir:
+- Bu repo hasta verisi barındırmaz.
+- MIMIC-IV kullanımı için PhysioNet üzerinden yetkili erişim ve gerekli CITI eğitimi gerekir.
+- Ham veri şu dizinde beklenir:
 
 ```text
 data/raw/physionet.org/files/mimiciv/3.1
 ```
 
-- `data/raw/` icerigini immutably kabul edin; ham dosyalari kodla degistirmeyin.
-- Uretilen artifaktlar `data/processed/`, `data/splits/`, `data/replay/`, `results/iql_final/`, `runs/` ve `checkpoints/` altinda tutulur.
-- IQL politikasi yalnizca retrospektif arastirma ve benchmark amaciyla yorumlanmalidir.
+- `data/raw/` içeriğini immutable kabul edin; ham dosyaları kodla değiştirmeyin.
+- Üretilen artifaktlar `data/processed/`, `data/splits/`, `data/replay/`, `results/iql_final/`, `runs/` ve `checkpoints/` altında tutulur.
+- IQL politikası yalnızca retrospektif araştırma ve benchmark amacıyla yorumlanmalıdır.
 
 ## Kurulum
 
@@ -65,17 +65,17 @@ cd mimic-sepsis-drl
 uv sync
 ```
 
-Kurulumu dogrulamak icin:
+Kurulumu doğrulamak için:
 
 ```bash
 uv run python -m mimic_sepsis_rl.training.device --self-check
 ```
 
-Basari sinyali: Python ortami acilir, PyTorch cihazi raporlanir ve self-check hata vermeden tamamlanir.
+Başarı sinyali: Python ortamı açılır, PyTorch cihazı raporlanır ve self-check hata vermeden tamamlanır.
 
-## Hizli Baslangic
+## Hızlı Başlangıç
 
-Ham veri ve daha once uretilmis kohort/onset/episode/split dosyalari hazirsa IQL icin minimum akisi calistirin:
+Ham veri ve daha önce üretilmiş kohort/onset/episode/split dosyaları hazırsa IQL için minimum akışı çalıştırın:
 
 ```bash
 uv run python -m mimic_sepsis_rl.cli.build_transitions
@@ -85,30 +85,30 @@ uv run python -m mimic_sepsis_rl.training.experiment_runner --algorithm iql --dr
 uv run python -m mimic_sepsis_rl.training.experiment_runner --algorithm iql
 ```
 
-Beklenen basari sinyali: replay dosyalari okunur, IQL config'i raporlanir, dry-run hata vermez ve egitim artifaktlari IQL run dizinlerine yazilir.
+Beklenen başarı sinyali: replay dosyaları okunur, IQL config'i raporlanır, dry-run hata vermez ve eğitim artifaktları IQL run dizinlerine yazılır.
 
-## Pipeline Diyagrami
+## Pipeline Diyagramı
 
-Asagidaki Mermaid diyagrami, ham MIMIC-IV dosyalarindan IQL degerlendirme ciktilarina kadar adimlari sirayla ozetler.
+Aşağıdaki Mermaid diyagramı, ham MIMIC-IV dosyalarından IQL değerlendirme çıktılarına kadar adımları sırayla özetler.
 
 ```mermaid
 flowchart TD
-    A[Ham MIMIC-IV dosyalari] --> B[1. Kohortu uret]
-    B --> C[2. Sepsis onset uret]
-    C --> D[3. Episode grid uret]
-    D --> E[4. Train / validation / test split uret]
-    E --> F[5. State / action / reward / replay dataset uret]
-    F --> G[6. IQL konfigurasyonunu incele]
-    G --> H[7. Dry-run ile dosya yollari ve config'i dogrula]
-    H --> I[8. IQL egitimini baslat]
-    I --> J[9. OPE ve safety metrikleriyle finalist modeli sec]
+    A[Ham MIMIC-IV dosyaları] --> B[1. Kohortu üret]
+    B --> C[2. Sepsis onset üret]
+    C --> D[3. Episode grid üret]
+    D --> E[4. Train / validation / test split üret]
+    E --> F[5. State / action / reward / replay dataset üret]
+    F --> G[6. IQL konfigürasyonunu incele]
+    G --> H[7. Dry-run ile dosya yolları ve config'i doğrula]
+    H --> I[8. IQL eğitimini başlat]
+    I --> J[9. OPE ve safety metrikleriyle finalist modeli seç]
 ```
 
-## Tam Veri Pipeline'i
+## Tam Veri Pipeline'ı
 
-Asagidaki sira, ham MIMIC-IV dosyalarindan IQL replay veri setine kadar yeniden uretilebilir veri akisini verir.
+Aşağıdaki sıra, ham MIMIC-IV dosyalarından IQL replay veri setine kadar yeniden üretilebilir veri akışını verir.
 
-### 1. Kohortu uret
+### 1. Kohortu üret
 
 ```bash
 uv run python -m mimic_sepsis_rl.cli.build_cohort \
@@ -116,39 +116,39 @@ uv run python -m mimic_sepsis_rl.cli.build_cohort \
   --emit-audit
 ```
 
-Beklenen ciktilar:
+Beklenen çıktılar:
 
 - `data/processed/cohort/cohort.parquet`
 - `data/processed/cohort/excluded.parquet`
 - `data/processed/cohort/audit.json`
 
-### 2. Sepsis onset uret
+### 2. Sepsis onset üret
 
 ```bash
 uv run python -m mimic_sepsis_rl.data.onset \
   --config configs/onset/default.yaml
 ```
 
-Beklenen ciktilar:
+Beklenen çıktılar:
 
 - `data/processed/onset/onset_assignments.parquet`
 - `data/processed/onset/onset_candidates.parquet`
 - `data/processed/onset/unusable_episodes.parquet`
 - `data/processed/onset/onset_audit.json`
 
-### 3. Episode grid uret
+### 3. Episode grid üret
 
 ```bash
 uv run python -m mimic_sepsis_rl.cli.build_episode_grid
 ```
 
-Beklenen ciktilar:
+Beklenen çıktılar:
 
 - `data/processed/episodes/episodes.parquet`
 - `data/processed/episodes/episode_steps.parquet`
 - `data/processed/episodes/grid_audit.json`
 
-### 4. Train / validation / test split uret
+### 4. Train / validation / test split üret
 
 ```bash
 uv run python -m mimic_sepsis_rl.data.splits \
@@ -156,20 +156,20 @@ uv run python -m mimic_sepsis_rl.data.splits \
   --source-episode-set data/processed/episodes/episodes.parquet
 ```
 
-Beklenen ciktilar:
+Beklenen çıktılar:
 
 - `data/splits/train_manifest.parquet`
 - `data/splits/validation_manifest.parquet`
 - `data/splits/test_manifest.parquet`
 - `data/splits/split_summary.json`
 
-### 5. State / action / reward / replay dataset uret
+### 5. State / action / reward / replay dataset üret
 
 ```bash
 uv run python -m mimic_sepsis_rl.cli.build_transitions
 ```
 
-Beklenen ana ciktilar:
+Beklenen ana çıktılar:
 
 - `data/processed/features/state_vectors/state_table_raw.parquet`
 - `data/processed/features/state_vectors/state_table_normalized.parquet`
@@ -186,9 +186,9 @@ Beklenen ana ciktilar:
 - `data/replay/replay_test.parquet`
 - `data/replay/replay_test_meta.json`
 
-## IQL Egitimi
+## IQL Eğitimi
 
-IQL egitiminden once hedef konfigurasyonu inceleyin:
+IQL eğitiminden önce hedef konfigürasyonu inceleyin:
 
 ```bash
 uv run python -m mimic_sepsis_rl.training.experiment_runner \
@@ -196,7 +196,7 @@ uv run python -m mimic_sepsis_rl.training.experiment_runner \
   --describe
 ```
 
-Dosya yollarini ve konfigurasyonu yan etkisiz sekilde dogrulayin:
+Dosya yollarını ve konfigürasyonu yan etkisiz şekilde doğrulayın:
 
 ```bash
 uv run python -m mimic_sepsis_rl.training.experiment_runner \
@@ -204,30 +204,30 @@ uv run python -m mimic_sepsis_rl.training.experiment_runner \
   --dry-run
 ```
 
-Egitimi baslatin:
+Eğitimi başlatın:
 
 ```bash
 uv run python -m mimic_sepsis_rl.training.experiment_runner --algorithm iql
 ```
 
-IQL degerlendirmesinde tek loss degeriyle karar vermeyin. Model secimi FQE/WIS, ESS, support mass, clinician agreement, low-support rate ve safety flag'leri birlikte yorumlanarak yapilmalidir.
+IQL değerlendirmesinde tek loss değeriyle karar vermeyin. Model seçimi FQE/WIS, ESS, support mass, clinician agreement, low-support rate ve safety flag'leri birlikte yorumlanarak yapılmalıdır.
 
-## IQL Sonuclari
+## IQL Sonuçları
 
-| Cikti | Link | Not |
+| Çıktı | Link | Not |
 | --- | --- | --- |
-| Final rapor | [results/iql_final/final_report.md](results/iql_final/final_report.md) | Stage 2 secilen checkpoint ve baseline karsilastirmasi |
-| Final metrikler | [results/iql_final/final_metrics.json](results/iql_final/final_metrics.json) | Secilen IQL run ozeti |
-| Final karsilastirma | [results/iql_final/final_comparison.csv](results/iql_final/final_comparison.csv) | Baseline ve selected IQL tablo verisi |
-| Pre-sweep audit | [results/iql_final/audit/presweep_audit.json](results/iql_final/audit/presweep_audit.json) | Veri sizintisi ve pipeline audit sonucu |
-| Stage 1 manifest | [results/iql_final/stage1/stage1_manifest.json](results/iql_final/stage1/stage1_manifest.json) | Ilk sweep manifesti |
-| Stage 2 summary | [results/iql_final/stage2/stage2_summary.json](results/iql_final/stage2/stage2_summary.json) | Tekrarlanan seed finalist ozeti |
-| Secim gerekcesi | [results/iql_final/stage1/selection/selection_rationale.md](results/iql_final/stage1/selection/selection_rationale.md) | Finalist secim notlari |
-| Grafik katalogu | [docs/iql_graphics_catalog.md](docs/iql_graphics_catalog.md) | IQL grafiklerinin ne anlattigi |
+| Final rapor | [results/iql_final/final_report.md](results/iql_final/final_report.md) | Stage 2 seçilen checkpoint ve baseline karşılaştırması |
+| Final metrikler | [results/iql_final/final_metrics.json](results/iql_final/final_metrics.json) | Seçilen IQL run özeti |
+| Final karşılaştırma | [results/iql_final/final_comparison.csv](results/iql_final/final_comparison.csv) | Baseline ve selected IQL tablo verisi |
+| Pre-sweep audit | [results/iql_final/audit/presweep_audit.json](results/iql_final/audit/presweep_audit.json) | Veri sızıntısı ve pipeline audit sonucu |
+| Stage 1 manifest | [results/iql_final/stage1/stage1_manifest.json](results/iql_final/stage1/stage1_manifest.json) | İlk sweep manifesti |
+| Stage 2 summary | [results/iql_final/stage2/stage2_summary.json](results/iql_final/stage2/stage2_summary.json) | Tekrarlanan seed finalist özeti |
+| Seçim gerekçesi | [results/iql_final/stage1/selection/selection_rationale.md](results/iql_final/stage1/selection/selection_rationale.md) | Finalist seçim notları |
+| Grafik kataloğu | [docs/iql_graphics_catalog.md](docs/iql_graphics_catalog.md) | IQL grafiklerinin ne anlattığı |
 
-Final Stage 2 raporundaki secili konfigurasyon: `iql_sofa_shaped_conservative_safe`. Raporlanan metrikler FQE 2.848, WIS 8.203, WIS 95% CI 4.963-10.817, ESS 29.4 ve support mass 0.991 seklindedir.
+Final Stage 2 raporundaki seçili konfigürasyon: `iql_sofa_shaped_conservative_safe`. Raporlanan metrikler FQE 2.848, WIS 8.203, WIS 95% CI 4.963-10.817, ESS 29.4 ve support mass 0.991 şeklindedir.
 
-Ana gorseller:
+Ana görseller:
 
 - [results/iql_final/figures/fqe_vs_support.png](results/iql_final/figures/fqe_vs_support.png)
 - [results/iql_final/figures/seed_variance.png](results/iql_final/figures/seed_variance.png)
@@ -235,13 +235,13 @@ Ana gorseller:
 - [results/iql_final/figures/baseline_comparison.png](results/iql_final/figures/baseline_comparison.png)
 - [results/iql_final/figures/bootstrap_ci.png](results/iql_final/figures/bootstrap_ci.png)
 
-## Dokumantasyon
+## Dokümantasyon
 
-| Kategori | Dokuman | Link |
+| Kategori | Doküman | Link |
 | --- | --- | --- |
 | IQL protocol | Final hyperparameter sweep protocol | [docs/iql_final_sweep_protocol.md](docs/iql_final_sweep_protocol.md) |
-| IQL graphics | Grafik katalogu | [docs/iql_graphics_catalog.md](docs/iql_graphics_catalog.md) |
-| IQL proposal | Proje onerisi | [docs/proje_onerisi_iql.md](docs/proje_onerisi_iql.md) |
+| IQL graphics | Grafik kataloğu | [docs/iql_graphics_catalog.md](docs/iql_graphics_catalog.md) |
+| IQL proposal | Proje önerisi | [docs/proje_onerisi_iql.md](docs/proje_onerisi_iql.md) |
 | Cohort | Cohort selection rules | [docs/cohort_selection.md](docs/cohort_selection.md) |
 | Features | Feature dictionary | [docs/feature_dictionary.md](docs/feature_dictionary.md) |
 | Actions | Action mapping and discretization | [docs/action_mapping.md](docs/action_mapping.md) |
@@ -253,39 +253,39 @@ Ana gorseller:
 
 ## Sorun Giderme
 
-| Belirti | Olasi neden | Cozum |
+| Belirti | Olası neden | Çözüm |
 | --- | --- | --- |
-| `data/raw/physionet.org/files/mimiciv/3.1` bulunamiyor | Ham MIMIC-IV dosyalari indirilmemis veya farkli yerde | PhysioNet erisiminizi dogrulayin ve dosyalari beklenen dizine yerlestirin. |
-| IQL dry-run replay dosyasi bulamiyor | `build_transitions` calismadi veya ara pipeline eksik | `Tam Veri Pipeline'i` bolumundeki sirayi takip edin. |
-| IQL metrikleri tutarsiz gorunuyor | Farkli reward, seed, split veya preprocessing kullanildi | `results/iql_final/audit/presweep_audit.json` ve `docs/iql_final_sweep_protocol.md` dosyalarini kontrol edin. |
-| Yuksek FQE ama dusuk support | Politika veri destegi zayif aksiyonlara kayiyor olabilir | FQE'yi ESS, support mass, low-support rate ve clinician agreement ile birlikte yorumlayin. |
-| PyTorch cihaz hatasi | CUDA/MPS ortam uyumsuzlugu veya yanlis wheel | `uv run python -m mimic_sepsis_rl.training.device --self-check` komutuyla runtime'i dogrulayin. |
+| `data/raw/physionet.org/files/mimiciv/3.1` bulunamıyor | Ham MIMIC-IV dosyaları indirilmemiş veya farklı yerde | PhysioNet erişiminizi doğrulayın ve dosyaları beklenen dizine yerleştirin. |
+| IQL dry-run replay dosyası bulamıyor | `build_transitions` çalışmadı veya ara pipeline eksik | `Tam Veri Pipeline'ı` bölümündeki sırayı takip edin. |
+| IQL metrikleri tutarsız görünüyor | Farklı reward, seed, split veya preprocessing kullanıldı | `results/iql_final/audit/presweep_audit.json` ve `docs/iql_final_sweep_protocol.md` dosyalarını kontrol edin. |
+| Yüksek FQE ama düşük support | Politika veri desteği zayıf aksiyonlara kayıyor olabilir | FQE'yi ESS, support mass, low-support rate ve clinician agreement ile birlikte yorumlayın. |
+| PyTorch cihaz hatası | CUDA/MPS ortam uyumsuzluğu veya yanlış wheel | `uv run python -m mimic_sepsis_rl.training.device --self-check` komutuyla runtime'ı doğrulayın. |
 
-## Gelistirme
+## Geliştirme
 
-Gelistirme bagimliliklarini kurmak icin:
+Geliştirme bağımlılıklarını kurmak için:
 
 ```bash
 uv sync --group dev
 ```
 
-Testleri calistirin:
+Testleri çalıştırın:
 
 ```bash
 uv run pytest
 ```
 
-Kod kalitesi kontrolu:
+Kod kalitesi kontrolü:
 
 ```bash
 uv run ruff check .
 ```
 
-Pipeline otomasyonu icin `Snakefile` ve `scripts/` dizinini inceleyin.
+Pipeline otomasyonu için `Snakefile` ve `scripts/` dizinini inceleyin.
 
-## Atiflar
+## Atıflar
 
-MIMIC-IV veri seti ile uretilen calismalarda asagidaki kaynaklari referans verin.
+MIMIC-IV veri seti ile üretilen çalışmalarda aşağıdaki kaynakları referans verin.
 
 **MIMIC-IV Dataset**
 
@@ -298,3 +298,4 @@ MIMIC-IV veri seti ile uretilen calismalarda asagidaki kaynaklari referans verin
 **PhysioNet Standard Citation**
 
 > Goldberger, A., Amaral, L., Glass, L., Hausdorff, J., Ivanov, P. C., Mark, R., ... & Stanley, H. E. (2000). PhysioBank, PhysioToolkit, and PhysioNet: Components of a new research resource for complex physiologic signals. Circulation [Online]. 101 (23), pp. e215-e220. RRID:SCR_007345.
+
