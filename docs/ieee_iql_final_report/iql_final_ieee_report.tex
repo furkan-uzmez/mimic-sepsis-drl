@@ -112,6 +112,8 @@ action\_id = vaso\_bin \times 5 + fluid\_bin.
 \end{equation}
 Bin 0 tedavi yok anlamına gelir; sıfır dışı dozlar eğitim bölmesi üzerindeki çeyrekliklere göre Q1--Q4 olarak ayrılır. Sıfır doz ayrı tutulur, çünkü hiç tedavi vermemek küçük ama sıfır dışı tedaviyle aynı klinik anlamı taşımaz. Bin eşikleri yalnız eğitim bölmesi üzerinde öğrenilir ve doğrulama/test üzerinde dondurulmuş şekilde uygulanır. Eşikler tüm veri üzerinde hesaplansaydı test doz dağılımı aksiyon kodlamasına sızardı.
 
+Aksiyonların ayrık binler olarak modellenmesi üç nedenle tercih edilmiştir. Birincisi, MIMIC-IV gibi gözlemsel yoğun bakım verilerinde sürekli doz uzayının her bölgesi yeterli destek içermez; ayrık binleme, düşük destekli doz bölgelerinde ekstrapolasyon riskini azaltır. İkincisi, IV sıvı ve vazopresör kararlarının $5\times5$ grid olarak tanımlanması AI Clinician ve takip eden sepsis RL literatürüyle karşılaştırılabilirlik sağlar. Üçüncüsü, IQL ve OPE bileşenleri için davranış politikası olasılıklarının ve aksiyon frekanslarının güvenilir tahmini ayrık aksiyon uzayında daha kararlıdır. Bu nedenle sürekli doz tahmini yerine klinik olarak yorumlanabilir, destek denetimi yapılabilir ve sızıntısız biçimde öğrenilen ayrık tedavi binleri kullanılmıştır.
+
 \begin{table}[t]
 \centering
 \caption{Vazopresör ve IV sıvı aksiyon grid'i.}
