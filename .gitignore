@@ -14,6 +14,7 @@ checkpoints/iql_final/
 results/iql_final/
 results/iql_final_mock_backup/
 mimic/
+checkpoints
 
 # Virtual environments
 .venv
