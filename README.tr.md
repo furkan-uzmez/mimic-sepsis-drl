@@ -18,6 +18,7 @@ Bu repo klinik karar destek sistemi değildir. Amacı, hasta verisiyle canlı et
 - [Dokümantasyon](#dokümantasyon)
 - [Sorun Giderme](#sorun-giderme)
 - [Geliştirme](#geliştirme)
+- [Lisans](#lisans)
 - [Atıflar](#atıflar)
 
 ## Özellikler
@@ -283,6 +284,12 @@ uv run ruff check .
 
 Pipeline otomasyonu için `Snakefile` ve `scripts/` dizinini inceleyin.
 
+## Lisans
+
+Kaynak kod ve dokümantasyon MIT Lisansı ile lisanslanmıştır. Tam bileşen bazlı lisans beyanı için [LICENSE.md](LICENSE.md) dosyasına bakın.
+
+MIMIC-IV türevi artifaktlar, ham veri, checkpoint'ler, üretilen sonuçlar ve model release dosyaları ayrı MIMIC-IV, PhysioNet, araştırma kullanımı veya model release şartlarına tabi olabilir ve MIT kod lisansı tarafından bağımsız olarak yeniden lisanslanmaz.
+
 ## Atıflar
 
 MIMIC-IV veri seti ile üretilen çalışmalarda aşağıdaki kaynakları referans verin.
@@ -298,4 +305,3 @@ MIMIC-IV veri seti ile üretilen çalışmalarda aşağıdaki kaynakları refera
 **PhysioNet Standard Citation**
 
 > Goldberger, A., Amaral, L., Glass, L., Hausdorff, J., Ivanov, P. C., Mark, R., ... & Stanley, H. E. (2000). PhysioBank, PhysioToolkit, and PhysioNet: Components of a new research resource for complex physiologic signals. Circulation [Online]. 101 (23), pp. e215-e220. RRID:SCR_007345.
-

@@ -1,22 +1,43 @@
-# License And Use Terms
+# License
 
-This repository contains research software, documentation, derived data artifacts, and model release files for retrospective offline reinforcement learning on MIMIC-IV sepsis cohorts. Different parts of the repository are subject to different terms.
+This repository uses a component-based license model because it combines source code, documentation, MIMIC-IV-derived artifacts, experiment outputs, and model release files.
 
-This file is a project-level licensing declaration. It is not legal advice. Review upstream MIMIC-IV, PhysioNet, institutional, and model release requirements before redistribution or public release.
+This file is a project-level licensing declaration. It is not legal advice. Review upstream MIMIC-IV, PhysioNet, institutional, privacy, and model release requirements before redistribution or public release.
 
 ## Component License Summary
 
-| Component | Paths | Terms |
+| Component | Paths | License / Terms |
 | --- | --- | --- |
-| Source code and scripts | `src/`, `scripts/`, `configs/`, `tests/`, `Snakefile`, `pyproject.toml` | All rights reserved unless a separate open-source license is added. |
-| Documentation | `README.md`, `docs/` | All rights reserved unless a separate documentation license is added. |
-| Derived replay/split artifacts | `data/replay/`, `data/splits/` | Subject to MIMIC-IV and PhysioNet data use terms. Not independently relicensed here. |
-| Training checkpoints and generated results | `checkpoints/`, `results/`, `runs/` | Research artifacts only. Not for clinical, commercial, or production use. |
-| Hugging Face model release bundle | `hf_model_repo/mimic-sepsis-iql/` | See `hf_model_repo/mimic-sepsis-iql/LICENSE.md`. |
+| Source code and scripts | `src/`, `scripts/`, `configs/`, `tests/`, `Snakefile`, `pyproject.toml` | MIT License |
+| Documentation | `README.md`, `README.tr.md`, `docs/` | MIT License |
+| Derived replay/split/data artifacts | `data/replay/`, `data/splits/`, `data/processed/` | Subject to MIMIC-IV and PhysioNet data use terms. Not independently relicensed here. |
+| Raw MIMIC-IV data | `data/raw/` | Not included in this repository. Governed by PhysioNet/MIMIC-IV terms. |
 
-## Research-Only Restrictions
+## MIT License For Code And Documentation
 
-This project is intended for academic and retrospective research use only. It must not be used for diagnosis, treatment, triage, clinical decision support, live patient care, or automated medical decision-making.
+Copyright (c) 2026 Furkan Nezih Üzmez (furkan-uzmez)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of the source code and documentation files covered by this license (the
+"Software"), to deal in the Software without restriction, including without
+limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom
+the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Research And Clinical Use Notice
+
+This project is intended for academic and retrospective research use. It is not a clinical decision support system and must not be used for diagnosis, treatment, triage, live patient care, or automated medical decision-making.
 
 The models, checkpoints, policies, metrics, and evaluation results have not been prospectively validated and are not evidence of clinical safety or efficacy.
 
@@ -26,12 +47,6 @@ This repository does not grant access to MIMIC-IV and does not include raw patie
 
 Any derived cohort, split, replay, feature, action, reward, or evaluation artifact remains subject to those upstream data terms and must not be redistributed unless the user has verified that redistribution is permitted.
 
-## No Implied Open-Source License
+## No Warranty For Non-Code Artifacts
 
-Public availability of this repository does not grant permission to reuse, modify, redistribute, sublicense, or commercially exploit the code, data artifacts, model weights, or documentation beyond rights provided by platform terms and applicable law.
-
-If an open-source license is later added for the code or documentation, it will apply only to the components explicitly identified by that license and will not override MIMIC-IV, PhysioNet, model, clinical, privacy, or institutional restrictions.
-
-## No Warranty
-
-All materials are provided as-is, without warranty of any kind. Users are responsible for verifying legal, ethical, privacy, clinical, and institutional permissions before use, redistribution, or publication.
+All non-code research artifacts are provided as-is for retrospective research context only, without warranty of any kind. Users are responsible for verifying legal, ethical, privacy, clinical, and institutional permissions before use, redistribution, or publication.

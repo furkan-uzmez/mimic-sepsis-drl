@@ -18,6 +18,7 @@ This repository is not a clinical decision support system. Its purpose is to pro
 - [Documentation](#documentation)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
+- [License](#license)
 - [Citations](#citations)
 
 ## Features
@@ -282,6 +283,12 @@ uv run ruff check .
 ```
 
 For pipeline automation, inspect the `Snakefile` and `scripts/` directory.
+
+## License
+
+Source code and documentation are licensed under the MIT License. See [LICENSE.md](LICENSE.md) for the full component-based license declaration.
+
+MIMIC-IV-derived artifacts, raw data, checkpoints, generated results, and model release files may be subject to separate MIMIC-IV, PhysioNet, research-use, or model-release terms and are not independently relicensed by the MIT code license.
 
 ## Citations
 
